@@ -1,0 +1,54 @@
+===========================================
+XAMPP Virtual Host Setup Instructions
+===========================================
+
+To access your site at http://druk.test instead of the long URL:
+
+STEP 1: Edit Apache httpd-vhosts.conf
+--------------------------------------
+File Location: C:\xampp\apache\conf\extra\httpd-vhosts.conf
+
+Add this at the end:
+
+<VirtualHost *:80>
+    ServerName druk.test
+    DocumentRoot "C:/xampp/htdocs/Druk-Freelancing-System/public"
+    <Directory "C:/xampp/htdocs/Druk-Freelancing-System/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+STEP 2: Edit Windows hosts file
+--------------------------------
+File Location: C:\Windows\System32\drivers\etc\hosts
+(Open Notepad as Administrator to edit)
+
+Add this line:
+127.0.0.1    druk.test
+
+STEP 3: Update .env file
+------------------------
+Change APP_URL to:
+APP_URL=http://druk.test
+
+STEP 4: Restart Apache
+----------------------
+1. Open XAMPP Control Panel
+2. Stop Apache
+3. Start Apache
+
+STEP 5: Clear Laravel cache
+----------------------------
+Run: php artisan config:clear
+
+DONE! Access your site at:
+- Register: http://druk.test/register
+- Login: http://druk.test/login
+- Dashboard: http://druk.test/dashboard
+
+===========================================
+OR USE CURRENT LONG URL:
+===========================================
+If you don't want to setup virtual host, use:
+http://localhost/Druk-Freelancing-System/public/register
