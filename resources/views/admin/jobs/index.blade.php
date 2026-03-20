@@ -47,10 +47,7 @@
                         <div class="d-flex gap-1 justify-content-end">
                             <a href="{{ route('admin.jobs.show', $job) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa fa-eye"></i></a>
                             @if(!$job->trashed())
-                            <form method="POST" action="{{ route('admin.jobs.moderate', $job) }}" class="d-inline-block moderate-job-form">@csrf
-                                <input type="hidden" name="reason" class="moderate-reason-input">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Moderate" onclick="event.preventDefault(); moderateJob(this.form, '{{ addslashes($job->title) }}')"><i class="fa fa-ban"></i></button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Moderate" data-bs-toggle="modal" data-bs-target="#moderateJobModal" data-job-id="{{ $job->id }}" data-job-title="{{ $job->title }}" data-job-route="{{ route('admin.jobs.moderate', $job) }}"><i class="fa fa-ban"></i></button>
                             @else
                             <form method="POST" action="{{ route('admin.jobs.restore', $job) }}">@csrf <button class="btn btn-sm btn-outline-success" title="Restore"><i class="fa fa-undo"></i></button></form>
                             @endif
@@ -65,12 +62,61 @@
     </div>
     <div class="card-body pt-0">{{ $jobs->withQueryString()->links() }}</div>
 </div>
+
+<!-- Moderation Modal -->
+<div class="modal fade" id="moderateJobModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fa fa-ban me-2 text-danger"></i>Moderate Job Posting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="moderateJobForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-danger small">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will close and hide this job from all listings. This action is permanent.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Job Title</label>
+                        <div class="alert alert-light mb-0" id="jobTitleDisplay"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Moderation Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" id="moderationReason" class="form-control" rows="3" required placeholder="Provide clear details about why this job is being moderated (e.g., policy violation, inappropriate content)..."></textarea>
+                        <small class="text-muted">The reason will be logged in the audit trail for record keeping.</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="moderateJobConfirm" required>
+                        <label class="form-check-label small" for="moderateJobConfirm">
+                            I understand this will permanently close and hide this job
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you absolutely sure you want to moderate this job?')">
+                        <i class="fa fa-ban me-1"></i>Moderate Job
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-function moderateJob(form, title){
-    const reason = prompt('Enter reason for moderating (closing) the job "' + title + '" (required):');
-    if(!reason || !reason.trim()){ alert('A reason is required.'); return; }
-    form.querySelector('.moderate-reason-input').value = reason.trim();
-    form.submit();
-}
+// Set up modal when opener button is clicked
+document.getElementById('moderateJobModal').addEventListener('show.bs.modal', function (e) {
+    const button = e.relatedTarget;
+    const jobId = button.getAttribute('data-job-id');
+    const jobTitle = button.getAttribute('data-job-title');
+    const jobRoute = button.getAttribute('data-job-route');
+    
+    document.getElementById('jobTitleDisplay').textContent = jobTitle;
+    document.getElementById('moderateJobForm').action = jobRoute;
+    document.getElementById('moderationReason').value = '';
+    document.getElementById('moderateJobConfirm').checked = false;
+});
 </script>
 @endsection

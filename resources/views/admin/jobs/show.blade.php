@@ -13,13 +13,16 @@
                 <i class="fa fa-star me-1"></i>{{ $job->is_featured ? 'Unfeature' : 'Feature' }}
             </button>
         </form>
-        <form method="POST" action="{{ route('admin.jobs.moderate', $job) }}">
+        @if($job->status !== 'moderated')
+        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#moderateModal">
+            <i class="fa fa-ban me-1"></i>Moderate
+        </button>
+        @else
+        <form method="POST" action="{{ route('admin.jobs.restore', $job->id) }}">
             @csrf
-            <button class="btn btn-sm {{ $job->status === 'moderated' ? 'btn-success' : 'btn-danger' }}">
-                <i class="fa fa-{{ $job->status === 'moderated' ? 'check' : 'ban' }} me-1"></i>
-                {{ $job->status === 'moderated' ? 'Restore' : 'Moderate' }}
-            </button>
+            <button class="btn btn-sm btn-success"><i class="fa fa-check me-1"></i> Restore</button>
         </form>
+        @endif
         @else
         <form method="POST" action="{{ route('admin.jobs.restore', $job->id) }}">
             @csrf
@@ -147,6 +150,44 @@
             </div>
         </div>
         @endif
+    </div>
+</div>
+
+<!-- Moderation Modal -->
+<div class="modal fade" id="moderateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fa fa-ban me-2 text-danger"></i>Moderate Job Posting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.jobs.moderate', $job) }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-danger small">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will close and hide this job from all listings. This action is permanent.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Moderation Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" class="form-control" rows="3" required placeholder="Provide clear details about why this job is being moderated (e.g., policy violation, inappropriate content)..."></textarea>
+                        <small class="text-muted">The reason will be logged in the audit trail for record keeping.</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="moderateConfirm" required>
+                        <label class="form-check-label small" for="moderateConfirm">
+                            I understand this will permanently close and hide this job
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you absolutely sure you want to moderate this job?')">
+                        <i class="fa fa-ban me-1"></i>Moderate Job
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

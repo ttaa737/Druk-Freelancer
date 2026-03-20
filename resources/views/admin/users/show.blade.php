@@ -27,11 +27,20 @@
                 <form method="POST" action="{{ route('admin.users.suspend', $user) }}">
                     @csrf
                     <div class="modal-body">
-                        <p class="text-muted small mb-3">This will temporarily disable the user's account and freeze their wallet.</p>
+                        <div class="alert alert-warning small">
+                            <i class="fa fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> This action will temporarily disable the user's account and freeze their wallet. The user can be reactivated later.
+                        </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Suspension Reason <span class="text-danger">*</span></label>
                             <textarea name="reason" class="form-control" rows="3" required placeholder="Be specific about why this user is being suspended..."></textarea>
                             <small class="text-muted">The user will be notified of this reason.</small>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="suspendConfirm" required>
+                            <label class="form-check-label small" for="suspendConfirm">
+                                I understand this will temporarily suspend the user
+                            </label>
                         </div>
                     </div>
                     <div class="modal-footer">

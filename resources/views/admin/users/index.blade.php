@@ -62,14 +62,8 @@
                         <div class="d-flex gap-1 justify-content-end">
                             <a href="{{ route('admin.users.show', $user) }}" class="btn btn-sm btn-outline-primary" title="View"><i class="fa fa-eye"></i></a>
                             @if($user->status === 'active')
-                            <form method="POST" action="{{ route('admin.users.suspend', $user) }}">@csrf
-                                <input type="hidden" name="reason" value="Suspended by admin" />
-                                <button class="btn btn-sm btn-outline-warning" title="Suspend"><i class="fa fa-pause"></i></button>
-                            </form>
-                            <form method="POST" action="{{ route('admin.users.ban', $user) }}" class="d-inline-block user-action-form">@csrf
-                                <input type="hidden" name="reason" value="" />
-                                <button type="button" class="btn btn-sm btn-outline-danger" title="Ban" onclick="openReasonModal(this.form, 'Ban user: {{ addslashes($user->name) }}')"><i class="fa fa-ban"></i></button>
-                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-warning" title="Suspend" data-bs-toggle="modal" data-bs-target="#suspendUserModal" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" data-user-route="{{ route('admin.users.suspend', $user) }}"><i class="fa fa-pause"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Ban" data-bs-toggle="modal" data-bs-target="#banUserModal" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" data-user-route="{{ route('admin.users.ban', $user) }}"><i class="fa fa-ban"></i></button>
                             @else
                             <form method="POST" action="{{ route('admin.users.activate', $user) }}">@csrf <button class="btn btn-sm btn-outline-success" title="Activate"><i class="fa fa-check"></i></button></form>
                             @endif
@@ -86,6 +80,117 @@
         </table>
     </div>
     <div class="card-body pt-0">{{ $users->withQueryString()->links() }}</div>
-@include('admin.partials.reason-modal')
 </div>
+
+<!-- Suspend User Modal -->
+<div class="modal fade" id="suspendUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning bg-opacity-10">
+                <h5 class="modal-title"><i class="fa fa-pause me-2 text-warning"></i>Suspend User Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="suspendUserForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-warning small">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will temporarily disable the user's account and freeze their wallet. The user can be reactivated later.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">User</label>
+                        <div class="alert alert-light mb-0" id="suspendUserName"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Suspension Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" id="suspendReason" class="form-control" rows="3" placeholder="Be specific about why this user is being suspended..." required></textarea>
+                        <small class="text-muted">The user will be notified of this reason.</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="suspendConfirm" required>
+                        <label class="form-check-label small" for="suspendConfirm">
+                            I understand this will temporarily suspend the user
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to suspend this user?')">
+                        <i class="fa fa-pause me-1"></i>Suspend Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Ban User Modal -->
+<div class="modal fade" id="banUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-opacity-10">
+                <h5 class="modal-title"><i class="fa fa-ban me-2 text-danger"></i>Ban User Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="banUserForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-danger small">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will permanently ban the user and freeze all their funds. This cannot be easily reversed.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">User</label>
+                        <div class="alert alert-light mb-0" id="banUserName"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ban Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" id="banReason" class="form-control" rows="3" placeholder="Provide clear details about terms of service violation or reason for ban..." required></textarea>
+                        <small class="text-muted">The user will be notified of this reason.</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="banConfirmCheckbox" required>
+                        <label class="form-check-label small" for="banConfirmCheckbox">
+                            I understand this will ban the user permanently
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you absolutely sure you want to ban this user? This action is severe.')">
+                        <i class="fa fa-ban me-1"></i>Ban User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set up suspend modal when opener button is clicked
+document.getElementById('suspendUserModal').addEventListener('show.bs.modal', function (e) {
+    const button = e.relatedTarget;
+    const userId = button.getAttribute('data-user-id');
+    const userName = button.getAttribute('data-user-name');
+    const userRoute = button.getAttribute('data-user-route');
+
+    document.getElementById('suspendUserName').textContent = userName;
+    document.getElementById('suspendUserForm').action = userRoute;
+    document.getElementById('suspendReason').value = '';
+    document.getElementById('suspendConfirm').checked = false;
+});
+
+// Set up ban modal when opener button is clicked
+document.getElementById('banUserModal').addEventListener('show.bs.modal', function (e) {
+    const button = e.relatedTarget;
+    const userId = button.getAttribute('data-user-id');
+    const userName = button.getAttribute('data-user-name');
+    const userRoute = button.getAttribute('data-user-route');
+
+    document.getElementById('banUserName').textContent = userName;
+    document.getElementById('banUserForm').action = userRoute;
+    document.getElementById('banReason').value = '';
+    document.getElementById('banConfirmCheckbox').checked = false;
+});
+</script>
 @endsection

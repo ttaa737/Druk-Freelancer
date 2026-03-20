@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuditLogService;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -58,7 +59,10 @@ class AdminUserController extends Controller
         abort_if($user->isAdmin(), 403, 'Cannot suspend an admin account.');
         $request->validate(['reason' => 'required|string|max:500']);
 
-        $user->update(['status' => 'suspended']);
+        // Use parameterized query to avoid SQL quoting issues
+        DB::update("UPDATE `users` SET `status` = ? WHERE `id` = ?", ['suspended', $user->id]);
+        $user->refresh();
+        
         // Freeze wallet and store reason (guard if DB column missing)
         try {
             if ($user->wallet && Schema::hasColumn('wallets', 'is_frozen')) {
@@ -78,7 +82,10 @@ class AdminUserController extends Controller
         abort_if($user->isAdmin(), 403);
         $request->validate(['reason' => 'required|string|max:500']);
 
-        $user->update(['status' => 'banned']);
+        // Use parameterized query to avoid SQL quoting issues
+        DB::update("UPDATE `users` SET `status` = ? WHERE `id` = ?", ['banned', $user->id]);
+        $user->refresh();
+        
         // Freeze wallet and save reason (guard if DB column missing)
         try {
             if ($user->wallet && Schema::hasColumn('wallets', 'is_frozen')) {
@@ -98,7 +105,10 @@ class AdminUserController extends Controller
         if ($user->trashed()) {
             $user->restore();
         }
-        $user->update(['status' => 'active']);
+        // Use parameterized query to avoid SQL quoting issues
+        DB::update("UPDATE `users` SET `status` = ? WHERE `id` = ?", ['active', $user->id]);
+        $user->refresh();
+        
         // Unfreeze wallet and clear reason (guard if DB column missing)
         try {
             if ($user->wallet && Schema::hasColumn('wallets', 'is_frozen')) {
