@@ -30,7 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-        'email_verified'          => 'boolean',
+        'email_verified_at'       => 'datetime',
         'phone_verified'          => 'boolean',
         'identity_verified'       => 'boolean',
         'two_factor_confirmed_at' => 'datetime',
@@ -82,13 +82,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasVerifiedEmail(): bool
     {
-        return (bool) $this->email_verified;
+        return $this->email_verified_at !== null;
     }
 
     public function markEmailAsVerified(): bool
     {
         return $this->forceFill([
-            'email_verified' => 1,
+            'email_verified_at' => $this->freshTimestamp(),
         ])->save();
     }
 

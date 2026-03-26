@@ -72,7 +72,6 @@
             <i class="fa fa-id-card"></i> Verifications
         </a>
         <div class="section-label">Account</div>
-        <a href="{{ route('dashboard') }}" class="nav-link"><i class="fa fa-home"></i> Main Site</a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
