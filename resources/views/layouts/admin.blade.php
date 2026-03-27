@@ -44,7 +44,7 @@
     <button class="btn btn-sm btn-light d-lg-none position-absolute end-0 top-0 m-2" id="closeSidebar">
         <i class="fa fa-times"></i>
     </button>
-    <div class="brand fw-bold">Druk <span>Admin</span></div>
+    <div class="brand fw-bold">Druk Freelancer <span>Admin</span></div>
     <nav class="mt-2">
         <div class="section-label">Overview</div>
         <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">

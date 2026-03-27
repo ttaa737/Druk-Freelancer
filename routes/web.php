@@ -210,8 +210,8 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
             Route::post('/', [AdminCategoryController::class, 'storeCategory'])->name('store');
             Route::put('/{category}', [AdminCategoryController::class, 'updateCategory'])->name('update');
             Route::delete('/{category}', [AdminCategoryController::class, 'destroyCategory'])->name('destroy');
-            Route::post('/skills', [AdminCategoryController::class, 'storeSkill'])->name('skills.store');
-            Route::delete('/skills/{skill}', [AdminCategoryController::class, 'destroySkill'])->name('skills.destroy');
+            Route::post('/{category}/skills', [AdminCategoryController::class, 'storeSkill'])->name('skills.store');
+            Route::delete('/{category}/skills/{skill}', [AdminCategoryController::class, 'destroySkill'])->name('skills.destroy');
         });
 
         // Transactions

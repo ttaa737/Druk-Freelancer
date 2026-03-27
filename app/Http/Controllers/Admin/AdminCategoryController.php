@@ -70,20 +70,19 @@ class AdminCategoryController extends Controller
 
     // ─── Skills ──────────────────────────────────────────────────────────────
 
-    public function storeSkill(Request $request)
+    public function storeSkill(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:100|unique:skills,name',
-            'category_id' => 'nullable|exists:categories,id',
+            'name' => 'required|string|max:100|unique:skills,name',
         ]);
 
-        $skill = Skill::create(array_merge($validated, ['slug' => Str::slug($validated['name'])]));
+        $skill = Skill::create(array_merge($validated, ['category_id' => $category->id]));
         AuditLogService::log('skill.created', $skill);
 
         return back()->with('success', "Skill '{$skill->name}' added.");
     }
 
-    public function destroySkill(Skill $skill)
+    public function destroySkill(Category $category, Skill $skill)
     {
         $skill->delete();
         AuditLogService::log('skill.deleted', $skill);
