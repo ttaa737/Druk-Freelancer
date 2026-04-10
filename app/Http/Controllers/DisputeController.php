@@ -30,7 +30,7 @@ class DisputeController extends Controller
         $disputes = DisputeCase::where('raised_by', $user->id)
             ->orWhere(function ($q) use ($user) {
                 $q->whereHas('contract', function ($cq) use ($user) {
-                    $cq->where('job_poster_id', $user->id)
+                    $cq->where('poster_id', $user->id)
                        ->orWhere('freelancer_id', $user->id);
                 });
             })
@@ -67,7 +67,7 @@ class DisputeController extends Controller
         $user = Auth::user();
 
         abort_if(
-            $contract->job_poster_id !== $user->id && $contract->freelancer_id !== $user->id,
+            $contract->poster_id !== $user->id && $contract->freelancer_id !== $user->id,
             403
         );
         abort_unless(in_array($contract->status, ['active', 'completed']), 403);
@@ -85,7 +85,7 @@ class DisputeController extends Controller
         $user = Auth::user();
 
         abort_if(
-            $contract->job_poster_id !== $user->id && $contract->freelancer_id !== $user->id,
+            $contract->poster_id !== $user->id && $contract->freelancer_id !== $user->id,
             403
         );
 
@@ -184,7 +184,7 @@ class DisputeController extends Controller
         $contract = $dispute->contract;
 
         $isParty = $dispute->raised_by === $user->id
-            || $contract->job_poster_id === $user->id
+            || $contract->poster_id === $user->id
             || $contract->freelancer_id === $user->id;
 
         abort_if(!$isParty && !$user->isAdmin(), 403);

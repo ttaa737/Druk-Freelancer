@@ -47,8 +47,7 @@ class ContractController extends Controller
      */
     public function fundEscrow(Contract $contract)
     {
-        $this->authorize('update', $contract);
-        abort_unless(Auth::id() === $contract->poster_id, 403);
+        $this->authorize('fundEscrow', $contract);
 
         try {
             $transaction = $this->escrow->fundContractEscrow($contract);
@@ -94,7 +93,7 @@ class ContractController extends Controller
      */
     public function cancel(Request $request, Contract $contract)
     {
-        $this->authorize('view', $contract);
+        $this->authorize('cancel', $contract);
 
         $request->validate(['reason' => 'required|string|max:1000']);
 

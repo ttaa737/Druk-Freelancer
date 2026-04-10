@@ -121,7 +121,7 @@ class ProposalController extends Controller
      */
     public function award(Request $request, Proposal $proposal)
     {
-        $this->authorize('update', $proposal->job);
+        $this->authorize('award', $proposal);
 
         abort_if($proposal->job->contracts()->where('status', 'active')->exists(), 422, 'An active contract already exists for this job.');
 
