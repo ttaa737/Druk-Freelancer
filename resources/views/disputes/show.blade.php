@@ -22,16 +22,16 @@
         </div>
 
         <!-- Evidence Files -->
-        @if($dispute->evidenceFiles->count())
+        @if($dispute->evidence && $dispute->evidence->count())
         <div class="card mb-4">
             <div class="card-header fw-bold">Evidence Files</div>
             <ul class="list-group list-group-flush">
-                @foreach($dispute->evidenceFiles as $file)
+                @foreach($dispute->evidence as $file)
                 <li class="list-group-item d-flex align-items-center gap-3">
                     <i class="fa fa-file text-secondary"></i>
                     <div class="flex-grow-1">
                         <div class="small fw-semibold">{{ $file->original_name ?? basename($file->file_path) }}</div>
-                        <div class="text-muted" style="font-size:11px">Uploaded by {{ $file->uploader?->name }} · {{ $file->created_at->format('d M Y') }}</div>
+                        <div class="text-muted" style="font-size:11px">Uploaded by {{ $file->submittedBy?->name }} · {{ $file->created_at->format('d M Y') }}</div>
                     </div>
                     <a href="{{ Storage::url($file->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
                 </li>
@@ -48,7 +48,7 @@
                 <form method="POST" action="{{ route('disputes.evidence', $dispute) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-2">
-                        <input type="file" name="evidence_files[]" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png,.zip" required>
+                        <input type="file" name="files[]" class="form-control" multiple accept=".pdf,.jpg,.jpeg,.png,.zip" required>
                     </div>
                     <button class="btn btn-sm btn-primary">Upload</button>
                 </form>

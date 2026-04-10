@@ -40,9 +40,9 @@ class AdminDisputeController extends Controller
     public function show(DisputeCase $dispute)
     {
         $dispute->load([
-            'contract.job', 'contract.jobPoster.profile', 'contract.freelancer.profile',
+            'contract.job', 'contract.poster.profile', 'contract.freelancer.profile',
             'raisedBy.profile', 'assignedAdmin.profile',
-            'evidence.uploadedBy.profile',
+            'evidence.submittedBy.profile',
             'comments.user.profile',
             'contract.milestones',
         ]);
@@ -67,7 +67,7 @@ class AdminDisputeController extends Controller
         $request->validate([
             'resolution'      => 'required|in:favour_poster,favour_freelancer,split',
             'resolution_note' => 'required|string|max:2000',
-            'split_percent_poster'     => 'required_if:resolution,split|nullable|integer|min:0|max:100',
+            'freelancer_percent' => 'required_if:resolution,split|nullable|integer|min:0|max:100',
         ]);
 
         DB::transaction(function () use ($request, $dispute) {
@@ -84,8 +84,8 @@ class AdminDisputeController extends Controller
                     $this->escrow->releaseMilestonePayment($ms);
                 }
             } elseif ($request->resolution === 'split') {
-                $posterPct   = (int) $request->split_percent_poster;
-                $freelancerPct = 100 - $posterPct;
+                $freelancerPct = (int) $request->freelancer_percent;
+                $posterPct = 100 - $freelancerPct;
 
                 $posterAmt    = bcmul($escrowBal, $posterPct / 100, 2);
                 $freelancerAmt = bcmul($escrowBal, $freelancerPct / 100, 2);
@@ -100,21 +100,28 @@ class AdminDisputeController extends Controller
                 }
             }
 
+            $resolvedStatus = match ($request->resolution) {
+                'favour_poster' => 'resolved_poster',
+                'favour_freelancer' => 'resolved_freelancer',
+                default => 'resolved_split',
+            };
+
             $dispute->update([
-                'status'          => 'resolved',
-                'resolution'      => $request->resolution,
-                'resolution_note' => $request->resolution_note,
-                'resolved_by'     => Auth::id(),
-                'resolved_at'     => now(),
+                'status'                 => $resolvedStatus,
+                'resolution_notes'       => $request->resolution_note,
+                'poster_refund_amount'   => $request->resolution === 'favour_poster' ? $escrowBal : ($request->resolution === 'split' ? $posterAmt : 0),
+                'freelancer_payout_amount' => $request->resolution === 'favour_freelancer' ? $escrowBal : ($request->resolution === 'split' ? $freelancerAmt : 0),
+                'resolved_at'            => now(),
             ]);
 
             $contract->update(['status' => 'cancelled']);
 
             // Unfreeze wallets
-            $contract->jobPoster->wallet?->update(['is_frozen' => false]);
+            $contract->poster->wallet?->update(['is_frozen' => false]);
             $contract->freelancer->wallet?->update(['is_frozen' => false]);
 
-            NotificationService::disputeUpdate($dispute, 'resolved');
+            NotificationService::disputeUpdate($contract->poster, $dispute, 'Your dispute case has been resolved by admin.');
+            NotificationService::disputeUpdate($contract->freelancer, $dispute, 'Your dispute case has been resolved by admin.');
             AuditLogService::log('dispute.resolved', $dispute, notes: $request->resolution);
         });
 

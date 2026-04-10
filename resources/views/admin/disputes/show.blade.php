@@ -16,7 +16,7 @@
         <!-- Evidence -->
         <div class="card mb-4">
             <div class="card-header fw-bold">Evidence Files</div>
-            @forelse($dispute->evidenceFiles as $file)
+            @forelse($dispute->evidence as $file)
             <div class="list-group-item d-flex align-items-center justify-content-between p-3 border-bottom gap-3">
                 <div><i class="fa fa-file text-secondary me-2"></i><span class="small">{{ $file->original_name ?? basename($file->file_path) }}</span></div>
                 <a href="{{ Storage::url($file->file_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
@@ -91,7 +91,7 @@
                 <li class="list-group-item d-flex justify-content-between"><span class="text-muted small">Raised By</span><span class="small">{{ $dispute->raisedBy?->name }}</span></li>
                 <li class="list-group-item d-flex justify-content-between"><span class="text-muted small">Assigned To</span><span class="small">{{ $dispute->assignedAdmin?->name ?? '—' }}</span></li>
                 <li class="list-group-item d-flex justify-content-between"><span class="text-muted small">Contract</span><a href="{{ route('contracts.show', $dispute->contract) }}" class="small text-primary">View</a></li>
-                @if($dispute->resolution_note)<li class="list-group-item"><div class="text-muted small">Resolution</div><div class="small">{{ $dispute->resolution_note }}</div></li>@endif
+                @if($dispute->resolution_notes)<li class="list-group-item"><div class="text-muted small">Resolution</div><div class="small">{{ $dispute->resolution_notes }}</div></li>@endif
             </ul>
         </div>
         @if(!$dispute->assigned_admin_id || $dispute->status === 'open')

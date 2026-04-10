@@ -52,7 +52,7 @@ class DisputeController extends Controller
             'contract.job',
             'raisedBy.profile',
             'assignedAdmin.profile',
-            'evidence.uploadedBy.profile',
+            'evidence.submittedBy.profile',
             'comments.user.profile',
         ]);
 
@@ -93,14 +93,16 @@ class DisputeController extends Controller
             'subject'      => 'required|string|max:255',
             'description'  => 'required|string|max:5000',
             'milestone_id' => 'nullable|exists:milestones,id',
-            'evidence.*'   => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,doc,docx',
+            'evidence_files.*' => 'nullable|file|max:10240|mimes:pdf,jpg,jpeg,png,zip',
         ]);
 
         $dispute = DisputeCase::create([
             'contract_id'  => $contract->id,
             'raised_by'    => $user->id,
+            'against_user' => $contract->poster_id === $user->id ? $contract->freelancer_id : $contract->poster_id,
             'subject'      => $validated['subject'],
             'description'  => $validated['description'],
+            'reason'       => 'other',
             'milestone_id' => $validated['milestone_id'] ?? null,
             'status'       => 'open',
         ]);
@@ -112,17 +114,22 @@ class DisputeController extends Controller
         }
 
         // Upload any initial evidence
-        foreach ($request->file('evidence', []) as $file) {
+        foreach ($request->file('evidence_files', []) as $file) {
             $path = $file->store('dispute-evidence', 'public');
             $dispute->evidence()->create([
-                'uploaded_by'   => $user->id,
-                'file_path'      => $path,
-                'original_name'  => $file->getClientOriginalName(),
-                'file_type'      => $file->getMimeType(),
+                'submitted_by'  => $user->id,
+                'file_path'     => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'evidence_type' => 'file',
             ]);
         }
 
-        NotificationService::disputeUpdate($dispute, 'opened');
+        $recipient = $contract->poster_id === $user->id ? $contract->freelancer : $contract->poster;
+        NotificationService::disputeUpdate(
+            $recipient,
+            $dispute,
+            "A new dispute has been raised for contract #{$contract->contract_number}."
+        );
         AuditLogService::log('dispute.raised', $dispute, notes: $validated['subject']);
 
         return redirect()->route('disputes.show', $dispute)
@@ -145,11 +152,11 @@ class DisputeController extends Controller
         foreach ($request->file('files', []) as $file) {
             $path = $file->store('dispute-evidence', 'public');
             $dispute->evidence()->create([
-                'uploaded_by'   => Auth::id(),
-                'file_path'      => $path,
-                'original_name'  => $file->getClientOriginalName(),
-                'file_type'      => $file->getMimeType(),
-                'description'    => $request->description,
+                'submitted_by'  => Auth::id(),
+                'file_path'     => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'evidence_type' => 'file',
+                'description'   => $request->description,
             ]);
         }
 
@@ -171,7 +178,13 @@ class DisputeController extends Controller
             'comment' => $request->comment,
         ]);
 
-        NotificationService::disputeUpdate($dispute, 'new_comment');
+        $contract = $dispute->contract;
+        $recipient = $contract->poster_id === Auth::id() ? $contract->freelancer : $contract->poster;
+        NotificationService::disputeUpdate(
+            $recipient,
+            $dispute,
+            "A new comment was added to dispute case #{$dispute->case_number}."
+        );
 
         return back()->with('success', 'Comment added.');
     }
