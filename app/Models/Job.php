@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Job extends Model
 {
@@ -15,7 +16,7 @@ class Job extends Model
     protected $fillable = [
         'poster_id', 'category_id', 'title', 'slug', 'description', 'requirements',
         'type', 'budget_min', 'budget_max', 'duration_days', 'experience_level',
-        'dzongkhag', 'remote_ok', 'status', 'is_featured', 'expires_at',
+        'dzongkhag', 'remote_ok', 'status', 'is_featured', 'expires_at', 'deadline',
     ];
 
     protected $casts = [
@@ -65,6 +66,40 @@ class Job extends Model
         return $this->budget_max ? 'Up to Nu. ' . number_format($this->budget_max) : 'Negotiable';
     }
 
+    public function getDeadlineAttribute($value)
+    {
+        return $this->getAttribute('expires_at');
+    }
+
+    public function setDeadlineAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['expires_at'] = null;
+            return;
+        }
+
+        if ($value instanceof Carbon) {
+            $this->attributes['expires_at'] = $value;
+            return;
+        }
+
+        if (is_string($value)) {
+            $parsed = Carbon::createFromFormat('d/m/Y', $value);
+            $this->attributes['expires_at'] = $parsed->startOfDay();
+            return;
+        }
+
+        $this->attributes['expires_at'] = $value;
+    }
+
     public function scopeOpen($query) { return $query->where('status', 'open'); }
     public function scopeFeatured($query) { return $query->where('is_featured', true); }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKey()
+    {
+        return $this->slug;
+    }
 }

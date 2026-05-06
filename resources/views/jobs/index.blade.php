@@ -81,6 +81,18 @@
                             <span class="me-3"><i class="fa fa-clock me-1"></i>{{ $job->created_at->diffForHumans() }}</span>
                         </div>
                         <p class="text-muted small mb-2">{{ Str::limit($job->description, 150) }}</p>
+                        @if($job->deadline)
+                        @php
+                            $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
+                        @endphp
+                        <div class="small mb-2 {{ $deadlineIsPast ? 'text-danger fw-semibold' : 'text-muted' }}">
+                            <i class="fa fa-calendar-alt me-1"></i>
+                            Proposal deadline: {{ $job->deadline->format('d/m/Y') }}
+                            @if($deadlineIsPast)
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">Due now</span>
+                            @endif
+                        </div>
+                        @endif
                         <div class="d-flex flex-wrap gap-1">
                             @foreach($job->skills->take(5) as $skill)
                             <span class="badge bg-light text-dark border">{{ $skill->name }}</span>

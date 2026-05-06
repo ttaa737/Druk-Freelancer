@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
     Route::prefix('jobs')->name('jobs.')->group(function () {
         Route::get('/post', [JobController::class, 'create'])->name('create')->middleware('role:job_poster');
         Route::post('/', [JobController::class, 'store'])->name('store')->middleware('role:job_poster');
+        Route::post('/attachments/temp', [JobController::class, 'uploadTempAttachment'])->name('attachments.temp')->middleware('role:job_poster');
         Route::get('/{job}/edit', [JobController::class, 'edit'])->name('edit');
         Route::put('/{job}', [JobController::class, 'update'])->name('update');
         Route::delete('/{job}', [JobController::class, 'destroy'])->name('destroy');

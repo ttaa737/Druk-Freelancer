@@ -1,141 +1,142 @@
-@extends('layouts.app')
-@section('title', $job->title)
-@section('content')
+<?php $__env->startSection('title', $job->title); ?>
+<?php $__env->startSection('content'); ?>
 
 <div class="row g-4">
 
-    {{--  Main Column  --}}
+    
     <div class="col-lg-8">
 
-        {{-- Job Header Card --}}
+        
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                     <div>
-                        @if($job->is_featured)
+                        <?php if($job->is_featured): ?>
                         <span class="badge bg-warning text-dark mb-2"><i class="fa fa-star me-1"></i>Featured Job</span>
-                        @endif
-                        <h2 class="fw-bold mb-2" style="font-size:28px;">{{ $job->title }}</h2>
+                        <?php endif; ?>
+                        <h2 class="fw-bold mb-2" style="font-size:28px;"><?php echo e($job->title); ?></h2>
                     </div>
                 </div>
 
-                {{-- Job Metadata --}}
+                
                 <div class="row g-3 mb-4">
                     <div class="col-6 col-md-auto">
                         <div class="text-muted small fw-semibold text-uppercase">Category</div>
-                        <div class="fw-semibold">{{ $job->category?->name ?? 'Uncategorized' }}</div>
+                        <div class="fw-semibold"><?php echo e($job->category?->name ?? 'Uncategorized'); ?></div>
                     </div>
                     <div class="col-6 col-md-auto">
                         <div class="text-muted small fw-semibold text-uppercase">Type</div>
-                        <div class="fw-semibold"><span class="badge bg-primary bg-opacity-20 text-primary">{{ ucfirst($job->type) }}</span></div>
+                        <div class="fw-semibold"><span class="badge bg-primary bg-opacity-20 text-primary"><?php echo e(ucfirst($job->type)); ?></span></div>
                     </div>
                     <div class="col-6 col-md-auto">
                         <div class="text-muted small fw-semibold text-uppercase">Posted</div>
-                        <div class="fw-semibold">{{ $job->created_at->diffForHumans() }}</div>
+                        <div class="fw-semibold"><?php echo e($job->created_at->diffForHumans()); ?></div>
                     </div>
                     <div class="col-6 col-md-auto">
                         <div class="text-muted small fw-semibold text-uppercase">Views</div>
-                        <div class="fw-semibold"><i class="fa fa-eye me-1 text-primary"></i>{{ $job->views_count }}</div>
+                        <div class="fw-semibold"><i class="fa fa-eye me-1 text-primary"></i><?php echo e($job->views_count); ?></div>
                     </div>
                     <div class="col-6 col-md-auto">
                         <div class="text-muted small fw-semibold text-uppercase">Proposals</div>
-                        <div class="fw-semibold"><i class="fa fa-paper-plane me-1 text-primary"></i>{{ $job->proposals_count ?? $job->proposals->count() }}</div>
+                        <div class="fw-semibold"><i class="fa fa-paper-plane me-1 text-primary"></i><?php echo e($job->proposals_count ?? $job->proposals->count()); ?></div>
                     </div>
                 </div>
 
-                @if($job->deadline)
-                @php
+                <?php if($job->deadline): ?>
+                <?php
                     $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
                     $daysUntilDeadline = now()->diffInDays($job->deadline, absolute: true);
-                @endphp
-                <div class="alert {{ $deadlineIsPast ? 'alert-danger' : 'alert-warning' }} mb-0 d-flex align-items-center gap-3 py-3">
+                ?>
+                <div class="alert <?php echo e($deadlineIsPast ? 'alert-danger' : 'alert-warning'); ?> mb-0 d-flex align-items-center gap-3 py-3">
                     <div>
                         <i class="fa fa-calendar-alt fs-5"></i>
                     </div>
                     <div style="flex: 1;">
                         <div class="fw-semibold mb-1">Job & Proposal Deadline</div>
-                        <div class="fs-6 fw-bold text-danger">{{ $job->deadline->format('d/m/Y') }}</div>
-                        @if(!$deadlineIsPast && $daysUntilDeadline > 0)
-                        <small class="text-muted">{{ $daysUntilDeadline }} {{ str_plural('day', $daysUntilDeadline) }} remaining</small>
-                        @elseif($deadlineIsPast)
+                        <div class="fs-6 fw-bold text-danger"><?php echo e($job->deadline->format('d/m/Y')); ?></div>
+                        <?php if(!$deadlineIsPast && $daysUntilDeadline > 0): ?>
+                        <small class="text-muted"><?php echo e($daysUntilDeadline); ?> <?php echo e(str_plural('day', $daysUntilDeadline)); ?> remaining</small>
+                        <?php elseif($deadlineIsPast): ?>
                         <small class="text-danger fw-semibold">This deadline has passed</small>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
-        {{-- Job Details Card --}}
+        
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
 
 
                 <div class="mb-4">
                     <h6 class="fw-bold mb-3 pb-2 border-bottom"><i class="fa fa-align-left me-2 text-primary"></i>Project Description</h6>
-                    <div class="text-secondary" style="line-height:1.8; font-size:15px;">{!! nl2br(e($job->description)) !!}</div>
+                    <div class="text-secondary" style="line-height:1.8; font-size:15px;"><?php echo nl2br(e($job->description)); ?></div>
                 </div>
 
 
-                @if($job->attachments()->exists())
+                <?php if($job->attachments()->exists()): ?>
                 <div class="mb-4">
                     <h6 class="fw-bold mb-3 pb-2 border-bottom"><i class="fa fa-paperclip me-2 text-primary"></i>Attachments</h6>
                     <div class="d-flex flex-wrap gap-2">
-                        @foreach($job->attachments()->get() as $attachment)
-                        <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2">
-                            <i class="fa fa-download"></i>{{ $attachment->original_name }}
+                        <?php $__currentLoopData = $job->attachments()->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $attachment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <a href="<?php echo e(Storage::url($attachment->file_path)); ?>" target="_blank" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2">
+                            <i class="fa fa-download"></i><?php echo e($attachment->original_name); ?>
+
                         </a>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
 
 
-                @if($job->skills->isNotEmpty())
+                <?php if($job->skills->isNotEmpty()): ?>
                 <div>
                     <h6 class="fw-bold mb-3 pb-2 border-bottom"><i class="fa fa-star me-2 text-primary"></i>Required Skills</h6>
                     <div class="d-flex flex-wrap gap-2">
-                        @foreach($job->skills as $skill)
-                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">{{ $skill->name }}</span>
-                        @endforeach
+                        <?php $__currentLoopData = $job->skills; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $skill): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2"><?php echo e($skill->name); ?></span>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
 
             </div>
         </div>
 
-        {{-- Proposals (visible to job poster only) --}}
-        @auth
-        @if(auth()->user()->id === $job->poster_id)
+        
+        <?php if(auth()->guard()->check()): ?>
+        <?php if(auth()->user()->id === $job->poster_id): ?>
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white d-flex align-items-center justify-content-between py-3 border-bottom">
                 <span class="fw-bold fs-5">
                     <i class="fa fa-inbox me-2 text-primary"></i>Received Proposals
-                    <span class="badge bg-primary ms-2">{{ $job->proposals_count }}</span>
+                    <span class="badge bg-primary ms-2"><?php echo e($job->proposals_count); ?></span>
                 </span>
-                <a href="{{ route('jobs.proposals', $job) }}" class="btn btn-primary btn-sm">View All</a>
+                <a href="<?php echo e(route('jobs.proposals', $job)); ?>" class="btn btn-primary btn-sm">View All</a>
             </div>
             <div class="card-body p-0">
-                @foreach($job->proposals()->with('freelancer.profile')->latest()->take(10)->get() as $proposal)
+                <?php $__currentLoopData = $job->proposals()->with('freelancer.profile')->latest()->take(10)->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $proposal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="d-flex align-items-start gap-3 px-4 py-3 border-bottom hover" style="background:transparent; transition: background 0.2s;">
-                    <img src="{{ $proposal->freelancer->avatar_url }}" class="rounded-circle flex-shrink-0 object-fit-cover" width="48" height="48" alt="">
+                    <img src="<?php echo e($proposal->freelancer->avatar_url); ?>" class="rounded-circle flex-shrink-0 object-fit-cover" width="48" height="48" alt="">
                     <div class="flex-grow-1 overflow-hidden">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <div class="fw-bold">{{ $proposal->freelancer->name }}</div>
+                                <div class="fw-bold"><?php echo e($proposal->freelancer->name); ?></div>
                                 <small class="text-muted">
-                                    @if($proposal->freelancer->profile?->title)
-                                        {{ $proposal->freelancer->profile->title }}
-                                    @else
+                                    <?php if($proposal->freelancer->profile?->title): ?>
+                                        <?php echo e($proposal->freelancer->profile->title); ?>
+
+                                    <?php else: ?>
                                         Freelancer
-                                    @endif
+                                    <?php endif; ?>
                                 </small>
                             </div>
-                            <span class="fw-bold text-primary text-nowrap">Nu. {{ number_format($proposal->bid_amount) }}</span>
+                            <span class="fw-bold text-primary text-nowrap">Nu. <?php echo e(number_format($proposal->bid_amount)); ?></span>
                         </div>
-                        <p class="text-muted small mb-2" style="line-height:1.5;">{{ Str::limit($proposal->cover_letter, 120) }}</p>
-                        @php
+                        <p class="text-muted small mb-2" style="line-height:1.5;"><?php echo e(Str::limit($proposal->cover_letter, 120)); ?></p>
+                        <?php
                             if ($proposal->status === 'pending') {
                                 $pClass = 'bg-warning text-dark';
                             } elseif ($proposal->status === 'awarded') {
@@ -143,63 +144,84 @@
                             } else {
                                 $pClass = 'bg-secondary';
                             }
-                        @endphp
+                        ?>
                         <div class="d-flex gap-2 align-items-center">
-                            <span class="badge {{ $pClass }} small">{{ ucfirst($proposal->status) }}</span>
-                            <a href="{{ route('proposals.show', $proposal) }}" class="btn btn-link btn-sm p-0 text-primary">View Full →</a>
+                            <span class="badge <?php echo e($pClass); ?> small"><?php echo e(ucfirst($proposal->status)); ?></span>
+                            <a href="<?php echo e(route('proposals.show', $proposal)); ?>" class="btn btn-link btn-sm p-0 text-primary">View Full →</a>
                         </div>
                     </div>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
-        @endif
-        @endauth
+        <?php endif; ?>
+        <?php endif; ?>
 
-        {{-- Submit Proposal Form --}}
-        @auth
-        @if(auth()->user()->hasRole('freelancer') && $job->status === 'open' && !$alreadyApplied && $job->poster_id !== auth()->id())
-            @if(auth()->user()->verification_status === 'verified')
+        
+        <?php if(auth()->guard()->check()): ?>
+        <?php if(auth()->user()->hasRole('freelancer') && $job->status === 'open' && !$alreadyApplied && $job->poster_id !== auth()->id()): ?>
+            <?php if(auth()->user()->verification_status === 'verified'): ?>
             <div class="card border-0 shadow-sm" id="proposal-form">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h5 class="fw-bold mb-1"><i class="fa fa-paper-plane me-2 text-primary"></i>Submit Your Proposal</h5>
                     <p class="text-muted small mb-0">Write a compelling proposal that showcases your experience and understanding of the project.</p>
-                    @if($job->budget_max)
+                    <?php if($job->budget_max): ?>
                     <div class="alert alert-info py-2 px-3 mt-3 mb-0 small d-flex align-items-center gap-2">
                         <i class="fa fa-info-circle"></i>
-                        <span><strong>Maximum bid for this job:</strong> Nu. {{ number_format($job->budget_max) }}</span>
+                        <span><strong>Maximum bid for this job:</strong> Nu. <?php echo e(number_format($job->budget_max)); ?></span>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('proposals.store', $job) }}">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('proposals.store', $job)); ?>">
+                        <?php echo csrf_field(); ?>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small text-uppercase text-muted">Bid Amount (Nu.) <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-text bg-light border-end-0">Nu.</span>
-                                    <input type="number" name="bid_amount" class="form-control border-start-0" required min="1" placeholder="15,000" value="{{ old('bid_amount') }}" {{ $job->budget_max ? 'max="' . $job->budget_max . '"' : '' }} style="font-size:16px;">
+                                    <input type="number" name="bid_amount" class="form-control border-start-0" required min="1" placeholder="15,000" value="<?php echo e(old('bid_amount')); ?>" <?php echo e($job->budget_max ? 'max="' . $job->budget_max . '"' : ''); ?> style="font-size:16px;">
                                 </div>
-                                @if($job->budget_max)
-                                <small class="text-muted d-block mt-2">Cannot exceed Nu. {{ number_format($job->budget_max) }}</small>
-                                @endif
-                                @error('bid_amount') <small class="text-danger d-block mt-1"><i class="fa fa-exclamation-circle me-1"></i>{{ $message }}</small> @enderror
+                                <?php if($job->budget_max): ?>
+                                <small class="text-muted d-block mt-2">Cannot exceed Nu. <?php echo e(number_format($job->budget_max)); ?></small>
+                                <?php endif; ?>
+                                <?php $__errorArgs = ['bid_amount'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <small class="text-danger d-block mt-1"><i class="fa fa-exclamation-circle me-1"></i><?php echo e($message); ?></small> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small text-uppercase text-muted">Delivery Time (days)</label>
                                 <div class="input-group input-group-lg">
-                                    <input type="number" name="delivery_days" class="form-control" min="1" placeholder="7" value="{{ old('delivery_days') }}" style="font-size:16px;">
+                                    <input type="number" name="delivery_days" class="form-control" min="1" placeholder="7" value="<?php echo e(old('delivery_days')); ?>" style="font-size:16px;">
                                     <span class="input-group-text bg-light">days</span>
                                 </div>
-                                @error('delivery_days') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+                                <?php $__errorArgs = ['delivery_days'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <small class="text-danger d-block mt-1"><?php echo e($message); ?></small> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-semibold small text-uppercase text-muted">Cover Letter <span class="text-danger">*</span></label>
                             <textarea name="cover_letter" class="form-control" rows="7" required style="font-size:15px; resize:vertical;"
-                                      placeholder="Tell the client about your experience, approach, and why you're the best fit for this project...">{{ old('cover_letter') }}</textarea>
-                            @error('cover_letter') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+                                      placeholder="Tell the client about your experience, approach, and why you're the best fit for this project..."><?php echo e(old('cover_letter')); ?></textarea>
+                            <?php $__errorArgs = ['cover_letter'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <small class="text-danger d-block mt-1"><?php echo e($message); ?></small> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                             <button type="submit" class="btn btn-primary btn-lg">
@@ -210,7 +232,7 @@
                     </form>
                 </div>
             </div>
-            @else
+            <?php else: ?>
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-start gap-4">
@@ -220,70 +242,72 @@
                         <div class="flex-grow-1">
                             <h6 class="fw-bold mb-2"><i class="fa fa-lock me-2"></i>Account Verification Required</h6>
                             <p class="text-muted mb-3">Complete your account verification to submit proposals. This helps build trust in our community.</p>
-                            <a href="{{ route('profile.edit') }}#tab-docs" class="btn btn-info text-white btn-sm">
+                            <a href="<?php echo e(route('profile.edit')); ?>#tab-docs" class="btn btn-info text-white btn-sm">
                                 <i class="fa fa-arrow-right me-1"></i>Complete Verification
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-            @endif
-        @endif
-        @endauth
+            <?php endif; ?>
+        <?php endif; ?>
+        <?php endif; ?>
 
     </div>
 
-    {{-- Sidebar  --}}
+    
     <div class="col-lg-4">
 
-        {{-- Budget Card --}}
+        
         <div class="card border-0 shadow-sm mb-3 sticky-top" style="top: 20px;">
             <div class="card-body">
                 <div class="text-muted small fw-semibold text-uppercase mb-2">Project Budget</div>
-                <div style="font-size: 32px; font-weight: 800; color: #0d6efd; margin-bottom: 1rem;">{{ $job->budgetRange }}</div>
+                <div style="font-size: 32px; font-weight: 800; color: #0d6efd; margin-bottom: 1rem;"><?php echo e($job->budgetRange); ?></div>
 
                 <div class="mb-3">
                     <div class="d-flex flex-wrap gap-2">
                         <span class="badge bg-light text-dark border" style="font-size: 12px; padding: 6px 10px;">
-                            <i class="fa fa-briefcase me-1"></i>{{ ucfirst($job->type) }}
+                            <i class="fa fa-briefcase me-1"></i><?php echo e(ucfirst($job->type)); ?>
+
                         </span>
-                        @if($job->experience_level)
+                        <?php if($job->experience_level): ?>
                         <span class="badge bg-light text-dark border" style="font-size: 12px; padding: 6px 10px;">
-                            <i class="fa fa-layer-group me-1"></i>{{ ucfirst($job->experience_level) }}
+                            <i class="fa fa-layer-group me-1"></i><?php echo e(ucfirst($job->experience_level)); ?>
+
                         </span>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                @if($job->deadline)
-                @php
+                <?php if($job->deadline): ?>
+                <?php
                     $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
                     $daysUntilDeadline = now()->diffInDays($job->deadline, absolute: true);
-                @endphp
-                <div class="alert {{ $deadlineIsPast ? 'alert-danger' : 'alert-warning' }} py-3 px-3 d-flex align-items-center gap-3 mb-3">
+                ?>
+                <div class="alert <?php echo e($deadlineIsPast ? 'alert-danger' : 'alert-warning'); ?> py-3 px-3 d-flex align-items-center gap-3 mb-3">
                     <i class="fa fa-calendar-alt fs-5"></i>
                     <div style="font-size: 14px;">
                         <div class="fw-semibold mb-1">Job & Proposal Deadline</div>
-                        <div class="fs-6 fw-bold text-danger">{{ $job->deadline->format('d/m/Y') }}</div>
-                        @if(!$deadlineIsPast && $daysUntilDeadline > 0)
-                        <small class="text-muted">{{ $daysUntilDeadline }} {{ str_plural('day', $daysUntilDeadline) }} remaining</small>
-                        @elseif($deadlineIsPast)
+                        <div class="fs-6 fw-bold text-danger"><?php echo e($job->deadline->format('d/m/Y')); ?></div>
+                        <?php if(!$deadlineIsPast && $daysUntilDeadline > 0): ?>
+                        <small class="text-muted"><?php echo e($daysUntilDeadline); ?> <?php echo e(str_plural('day', $daysUntilDeadline)); ?> remaining</small>
+                        <?php elseif($deadlineIsPast): ?>
                         <small class="text-danger fw-semibold">This deadline has passed</small>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
 
                 <hr>
 
-                @auth
-                    @if(auth()->user()->hasRole('freelancer') && $job->status === 'open' && $job->poster_id !== auth()->id())
-                        @if(!$alreadyApplied)
-                            @if(auth()->user()->verification_status === 'verified')
+                <?php if(auth()->guard()->check()): ?>
+                    <?php if(auth()->user()->hasRole('freelancer') && $job->status === 'open' && $job->poster_id !== auth()->id()): ?>
+                        <?php if(!$alreadyApplied): ?>
+                            <?php if(auth()->user()->verification_status === 'verified'): ?>
                             <a href="#proposal-form" class="btn btn-primary w-100 btn-lg">
                                 <i class="fa fa-paper-plane me-2"></i>Submit Proposal
                             </a>
-                            @else
+                            <?php else: ?>
                             <button type="button" class="btn btn-outline-secondary w-100 btn-lg" disabled>
                                 <i class="fa fa-paper-plane me-2"></i>Submit Proposal
                             </button>
@@ -293,14 +317,14 @@
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold mb-2">Verify Your Account</div>
                                         <div class="text-muted mb-2" style="font-size: 13px;">Complete verification to submit proposals and build your profile.</div>
-                                        <a href="{{ route('profile.edit') }}#tab-docs" class="btn btn-info btn-sm text-white">
+                                        <a href="<?php echo e(route('profile.edit')); ?>#tab-docs" class="btn btn-info btn-sm text-white">
                                             <i class="fa fa-arrow-right me-1"></i>Get Verified
                                         </a>
                                     </div>
                                 </div>
                             </div>
-                            @endif
-                        @else
+                            <?php endif; ?>
+                        <?php else: ?>
                         <div class="alert alert-success py-3 px-3 d-flex align-items-center gap-2 mb-0">
                             <i class="fa fa-check-circle fs-5"></i>
                             <div>
@@ -308,53 +332,53 @@
                                 <small class="text-muted">You've already submitted a proposal for this job.</small>
                             </div>
                         </div>
-                        @endif
-                    @elseif(auth()->user()->id === $job->poster_id)
-                    <a href="{{ route('jobs.edit', $job) }}" class="btn btn-outline-secondary w-100 btn-lg">
+                        <?php endif; ?>
+                    <?php elseif(auth()->user()->id === $job->poster_id): ?>
+                    <a href="<?php echo e(route('jobs.edit', $job)); ?>" class="btn btn-outline-secondary w-100 btn-lg">
                         <i class="fa fa-edit me-2"></i>Edit Job
                     </a>
-                    @else
-                    <a href="{{ route('login', ['intended' => route('jobs.show', $job)]) }}" class="btn btn-primary w-100 btn-lg">
+                    <?php else: ?>
+                    <a href="<?php echo e(route('login', ['intended' => route('jobs.show', $job)])); ?>" class="btn btn-primary w-100 btn-lg">
                         <i class="fa fa-sign-in-alt me-2"></i>Login to Apply
                     </a>
-                    @endif
-                @else
-                <a href="{{ route('login', ['intended' => route('jobs.show', $job)]) }}" class="btn btn-primary w-100 btn-lg">
+                    <?php endif; ?>
+                <?php else: ?>
+                <a href="<?php echo e(route('login', ['intended' => route('jobs.show', $job)])); ?>" class="btn btn-primary w-100 btn-lg">
                     <i class="fa fa-sign-in-alt me-2"></i>Login to Apply
                 </a>
-                @endauth
+                <?php endif; ?>
             </div>
         </div>
 
-        {{-- Client Card --}}
+        
         <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <div class="text-muted small fw-semibold text-uppercase mb-3 pb-3 border-bottom">About the Client</div>
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <img src="{{ $job->poster->avatar_url }}" class="rounded-circle object-fit-cover flex-shrink-0 border" width="50" height="50" alt="">
+                    <img src="<?php echo e($job->poster->avatar_url); ?>" class="rounded-circle object-fit-cover flex-shrink-0 border" width="50" height="50" alt="">
                     <div class="overflow-hidden">
-                        <div class="fw-bold">{{ $job->poster->name }}</div>
-                        @if($job->poster->profile?->company_name)
-                        <div class="text-muted small text-truncate">{{ $job->poster->profile->company_name }}</div>
-                        @else
+                        <div class="fw-bold"><?php echo e($job->poster->name); ?></div>
+                        <?php if($job->poster->profile?->company_name): ?>
+                        <div class="text-muted small text-truncate"><?php echo e($job->poster->profile->company_name); ?></div>
+                        <?php else: ?>
                         <div class="text-muted small">Job Poster</div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                @if($job->poster->profile?->dzongkhag)
+                <?php if($job->poster->profile?->dzongkhag): ?>
                 <div class="text-muted small mb-2 d-flex align-items-center gap-2">
-                    <i class="fa fa-map-marker-alt text-danger"></i>{{ $job->poster->profile->dzongkhag }}, Bhutan
+                    <i class="fa fa-map-marker-alt text-danger"></i><?php echo e($job->poster->profile->dzongkhag); ?>, Bhutan
                 </div>
-                @endif
+                <?php endif; ?>
 
-                @if($job->poster->verification_status === 'verified')
+                <?php if($job->poster->verification_status === 'verified'): ?>
                 <div class="mb-3">
                     <span class="badge bg-success"><i class="fa fa-check-circle me-1"></i>Verified Client</span>
                 </div>
-                @endif
+                <?php endif; ?>
 
-                <a href="{{ route('profile.show', $job->poster) }}" class="btn btn-outline-primary btn-sm w-100">
+                <a href="<?php echo e(route('profile.show', $job->poster)); ?>" class="btn btn-outline-primary btn-sm w-100">
                     <i class="fa fa-user me-1"></i>View Full Profile
                 </a>
             </div>
@@ -363,11 +387,11 @@
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const bidInput = document.querySelector('input[name="bid_amount"]');
-    const maxBid = {{ $job->budget_max ?? 'null' }};
+    const maxBid = <?php echo e($job->budget_max ?? 'null'); ?>;
     
     if (bidInput && maxBid) {
         bidInput.addEventListener('change', function() {
@@ -381,6 +405,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views/jobs/show.blade.php ENDPATH**/ ?>

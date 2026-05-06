@@ -26,12 +26,27 @@ class ProposalController extends Controller
     public function store(Request $request, Job $job)
     {
         abort_unless(Auth::user()->isFreelancer(), 403, 'Only freelancers can submit proposals.');
+        // Require account verification before submitting proposals
+        if (Auth::user()->verification_status !== 'verified') {
+            return redirect()->to(route('profile.edit') . '#tab-docs')
+                             ->with('warning', 'Please verify your account before submitting proposals.');
+        }
         abort_if($job->status !== 'open', 422, 'This job is no longer accepting proposals.');
         abort_if(Proposal::where('job_id', $job->id)->where('freelancer_id', Auth::id())->exists(), 422, 'You have already submitted a proposal for this job.');
 
         $validated = $request->validate([
             'cover_letter'           => 'required|string|min:50|max:3000',
-            'bid_amount'             => 'required|numeric|min:100|max:9999999',
+            'bid_amount'             => [
+                'required',
+                'numeric',
+                'min:100',
+                'max:9999999',
+                function ($attribute, $value, $fail) use ($job) {
+                    if ($job->budget_max && $value > $job->budget_max) {
+                        $fail("Bid amount cannot exceed the maximum budget of Nu. " . number_format($job->budget_max) . " for this job.");
+                    }
+                },
+            ],
             'delivery_days'          => 'required|integer|min:1|max:365',
             'milestones'             => 'nullable|array|min:1|max:10',
             'milestones.*.title'     => 'required_with:milestones|string|max:200',

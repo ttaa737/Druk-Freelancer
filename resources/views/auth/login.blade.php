@@ -10,6 +10,9 @@
 
 <form method="POST" action="{{ route('login') }}">
     @csrf
+    @if(request('intended'))
+    <input type="hidden" name="intended" value="{{ request('intended') }}">
+    @endif
     <div class="mb-3">
         <label class="form-label small fw-semibold">Email Address</label>
         <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"

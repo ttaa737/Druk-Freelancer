@@ -61,13 +61,17 @@
                         <div class="col-md-3">
                             <small class="text-muted d-block">Proposal Status</small>
                             @php
-                                $statusConfig = match($proposal->status) {
-                                    'pending' => ['class' => 'warning text-dark', 'icon' => 'clock'],
-                                    'awarded' => ['class' => 'success', 'icon' => 'trophy'],
-                                    'rejected' => ['class' => 'danger', 'icon' => 'times-circle'],
-                                    'withdrawn' => ['class' => 'secondary', 'icon' => 'undo'],
-                                    default => ['class' => 'secondary', 'icon' => 'circle'],
-                                };
+                                if ($proposal->status === 'pending') {
+                                    $statusConfig = ['class' => 'warning text-dark', 'icon' => 'clock'];
+                                } elseif ($proposal->status === 'awarded') {
+                                    $statusConfig = ['class' => 'success', 'icon' => 'trophy'];
+                                } elseif ($proposal->status === 'rejected') {
+                                    $statusConfig = ['class' => 'danger', 'icon' => 'times-circle'];
+                                } elseif ($proposal->status === 'withdrawn') {
+                                    $statusConfig = ['class' => 'secondary', 'icon' => 'undo'];
+                                } else {
+                                    $statusConfig = ['class' => 'secondary', 'icon' => 'circle'];
+                                }
                             @endphp
                             <span class="badge bg-{{ $statusConfig['class'] }} mt-1">
                                 <i class="fa fa-{{ $statusConfig['icon'] }} me-1"></i>{{ ucfirst($proposal->status) }}

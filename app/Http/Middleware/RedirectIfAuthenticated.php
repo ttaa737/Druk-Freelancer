@@ -17,6 +17,14 @@ class RedirectIfAuthenticated
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
+        // Capture and store the intended URL from the request (query or post data)
+        if ($request->has('intended')) {
+            $intended = $request->query('intended') ?? $request->input('intended');
+            if ($intended) {
+                $request->session()->put('url.intended', $intended);
+            }
+        }
+
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {

@@ -9,6 +9,7 @@ use App\Models\Skill;
 use App\Services\AuditLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class JobController extends Controller
@@ -22,7 +23,7 @@ class JobController extends Controller
     public function index(Request $request)
     {
         $query = Job::with(['category', 'poster.profile', 'skills'])
-                    ->where('status', 'open')
+                    ->whereIn('status', ['open', 'draft'])
                     ->where(function ($q) {
                         $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
                     });
@@ -85,15 +86,20 @@ class JobController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Job::class);
+        // Require account verification before creating a job
+        if (Auth::user()->verification_status !== 'verified') {
+            return redirect()->to(route('profile.edit') . '#tab-docs')
+                             ->with('warning', 'Please verify your account before posting jobs.');
+        }
 
         $validated = $request->validate([
             'title'            => 'required|string|max:200',
             'category_id'      => 'required|exists:categories,id',
             'description'      => 'required|string|min:100|max:10000',
             'requirements'     => 'nullable|string|max:5000',
-            'type'             => 'required|in:fixed,hourly',
-            'budget_min'       => 'nullable|numeric|min:100',
-            'budget_max'       => 'nullable|numeric|min:100|gt:budget_min',
+            'type'             => 'required|in:fixed,hourly,milestone',
+            'budget_min'       => 'nullable|numeric|min:300|max:500000',
+            'budget_max'       => 'nullable|numeric|min:300|max:500000|gt:budget_min',
             'duration_days'    => 'nullable|integer|min:1|max:365',
             'experience_level' => 'nullable|in:entry,intermediate,expert',
             'dzongkhag'        => 'nullable|string',
@@ -102,8 +108,17 @@ class JobController extends Controller
             'skills.*'         => 'exists:skills,id',
             'attachments'      => 'nullable|array|max:5',
             'attachments.*'    => 'file|mimes:pdf,doc,docx,jpg,png|max:5120',
-            'expires_at'       => 'nullable|date|after:today',
+            'temp_attachments' => 'nullable|array|max:5',
+            'temp_attachments.*' => 'string',
+            'temp_attachment_names' => 'nullable|array|max:5',
+            'temp_attachment_names.*' => 'string',
+            'deadline'         => 'nullable|date_format:d/m/Y|after:today',
         ]);
+
+        $tempAttachments = $validated['temp_attachments'] ?? [];
+        $tempAttachmentNames = $validated['temp_attachment_names'] ?? [];
+        unset($validated['temp_attachments']);
+        unset($validated['temp_attachment_names']);
 
         $job = Job::create([
             ...$validated,
@@ -127,6 +142,25 @@ class JobController extends Controller
                     'file_size'     => $file->getSize(),
                 ]);
             }
+        }
+
+        // Finalize temporary attachments uploaded before submit
+        foreach ($tempAttachments as $index => $tempPath) {
+            if (!Storage::disk('public')->exists($tempPath)) {
+                continue;
+            }
+
+            $extension = pathinfo($tempPath, PATHINFO_EXTENSION);
+            $finalPath = 'job-attachments/' . $job->id . '/' . Str::random(24) . ($extension ? '.' . $extension : '');
+            Storage::disk('public')->makeDirectory(dirname($finalPath));
+            Storage::disk('public')->move($tempPath, $finalPath);
+
+            $job->attachments()->create([
+                'file_path'     => $finalPath,
+                'original_name' => $tempAttachmentNames[$index] ?? basename($tempPath),
+                'file_type'     => Storage::disk('public')->mimeType($finalPath),
+                'file_size'     => Storage::disk('public')->size($finalPath),
+            ]);
         }
 
         AuditLogService::log('job.created', $job, notes: "Job posted: {$job->title}");
@@ -177,15 +211,16 @@ class JobController extends Controller
             'category_id'      => 'required|exists:categories,id',
             'description'      => 'required|string|min:100',
             'requirements'     => 'nullable|string',
-            'type'             => 'required|in:fixed,hourly',
-            'budget_min'       => 'nullable|numeric|min:0',
-            'budget_max'       => 'nullable|numeric|min:0',
+            'type'             => 'required|in:fixed,hourly,milestone',
+            'budget_min'       => 'nullable|numeric|min:300|max:500000',
+            'budget_max'       => 'nullable|numeric|min:300|max:500000',
             'duration_days'    => 'nullable|integer|min:1',
             'experience_level' => 'nullable|in:entry,intermediate,expert',
             'dzongkhag'        => 'nullable|string',
             'remote_ok'        => 'boolean',
             'skills'           => 'nullable|array',
             'skills.*'         => 'exists:skills,id',
+            'deadline'         => 'nullable|date_format:d/m/Y|after:today',
         ]);
 
         $oldValues = $job->toArray();
@@ -199,6 +234,24 @@ class JobController extends Controller
 
         return redirect()->route('jobs.show', $job->slug)
                          ->with('success', 'Job updated successfully.');
+    }
+
+    public function uploadTempAttachment(Request $request)
+    {
+        $request->validate([
+            'attachment' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120',
+        ]);
+
+        $file = $request->file('attachment');
+        $tempName = Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
+        $tempPath = $file->storeAs('job-attachments/tmp/' . Auth::id(), $tempName, 'public');
+
+        return response()->json([
+            'path' => $tempPath,
+            'name' => $file->getClientOriginalName(),
+            'url'  => Storage::disk('public')->url($tempPath),
+            'size' => $file->getSize(),
+        ]);
     }
 
     public function destroy(Job $job)

@@ -79,8 +79,23 @@
             </tbody>
         </table>
     </div>
-    <div class="card-body pt-0">{{ $users->withQueryString()->links() }}</div>
+    <div class="card-body pt-0 pb-3">
+        <div class="d-flex justify-content-end w-100">
+            <div class="pagination-wrapper ms-auto">
+                {{ $users->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
+    </div>
 </div>
+
+@push('styles')
+<style>
+    .pagination-wrapper .pagination {
+        margin-bottom: 0;
+        justify-content: flex-end !important;
+    }
+</style>
+@endpush
 
 <!-- Suspend User Modal -->
 <div class="modal fade" id="suspendUserModal" tabindex="-1">

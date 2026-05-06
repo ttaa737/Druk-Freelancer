@@ -121,6 +121,20 @@
                             <i class="fa fa-plus-circle" style="color:var(--druk-orange)"></i>
                             <small>Post Job</small>
                         </a>
+                        @if(auth()->user()->verification_status !== 'verified')
+                        <div class="border border-warning rounded-3 bg-warning bg-opacity-10 mt-2 p-3 small">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="fa fa-shield-alt text-warning mt-1"></i>
+                                <div>
+                                    <div class="fw-semibold mb-1">Verification required</div>
+                                    <div class="text-muted mb-2">Your account must be verified before jobs can be published.</div>
+                                    <a href="{{ route('profile.edit') }}#tab-docs" class="btn btn-warning btn-sm">
+                                        Open Verification
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                     <div class="col-6 col-sm-3">
                         <a href="{{ route('jobs.my') }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">

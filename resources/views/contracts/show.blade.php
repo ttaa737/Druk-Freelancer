@@ -70,14 +70,19 @@
                         <div class="col-md-3">
                             <small class="text-muted d-block">Contract Status</small>
                             @php
-                                $statusConfig = match($contract->status) {
-                                    'pending' => ['class' => 'warning text-dark', 'icon' => 'clock'],
-                                    'active' => ['class' => 'success', 'icon' => 'play-circle'],
-                                    'completed' => ['class' => 'primary', 'icon' => 'check-circle'],
-                                    'disputed' => ['class' => 'danger', 'icon' => 'exclamation-triangle'],
-                                    'cancelled' => ['class' => 'secondary', 'icon' => 'times-circle'],
-                                    default => ['class' => 'secondary', 'icon' => 'circle'],
-                                };
+                                if ($contract->status === 'pending') {
+                                    $statusConfig = ['class' => 'warning text-dark', 'icon' => 'clock'];
+                                } elseif ($contract->status === 'active') {
+                                    $statusConfig = ['class' => 'success', 'icon' => 'play-circle'];
+                                } elseif ($contract->status === 'completed') {
+                                    $statusConfig = ['class' => 'primary', 'icon' => 'check-circle'];
+                                } elseif ($contract->status === 'disputed') {
+                                    $statusConfig = ['class' => 'danger', 'icon' => 'exclamation-triangle'];
+                                } elseif ($contract->status === 'cancelled') {
+                                    $statusConfig = ['class' => 'secondary', 'icon' => 'times-circle'];
+                                } else {
+                                    $statusConfig = ['class' => 'secondary', 'icon' => 'circle'];
+                                }
                             @endphp
                             <span class="badge bg-{{ $statusConfig['class'] }} mt-1">
                                 <i class="fa fa-{{ $statusConfig['icon'] }} me-1"></i>{{ ucfirst($contract->status) }}
@@ -183,14 +188,19 @@
                                 <td class="small">{{ $ms->due_date?->format('d M Y') ?? 'Flexible' }}</td>
                                 <td>
                                     @php
-                                        $msStatus = match($ms->status) {
-                                            'paid' => ['class' => 'success', 'label' => 'Paid'],
-                                            'approved' => ['class' => 'primary', 'label' => 'Approved'],
-                                            'submitted' => ['class' => 'warning text-dark', 'label' => 'Review'],
-                                            'disputed' => ['class' => 'danger', 'label' => 'Disputed'],
-                                            'in_progress' => ['class' => 'info', 'label' => 'In Progress'],
-                                            default => ['class' => 'secondary', 'label' => 'Pending'],
-                                        };
+                                        if ($ms->status === 'paid') {
+                                            $msStatus = ['class' => 'success', 'label' => 'Paid'];
+                                        } elseif ($ms->status === 'approved') {
+                                            $msStatus = ['class' => 'primary', 'label' => 'Approved'];
+                                        } elseif ($ms->status === 'submitted') {
+                                            $msStatus = ['class' => 'warning text-dark', 'label' => 'Review'];
+                                        } elseif ($ms->status === 'disputed') {
+                                            $msStatus = ['class' => 'danger', 'label' => 'Disputed'];
+                                        } elseif ($ms->status === 'in_progress') {
+                                            $msStatus = ['class' => 'info', 'label' => 'In Progress'];
+                                        } else {
+                                            $msStatus = ['class' => 'secondary', 'label' => 'Pending'];
+                                        }
                                     @endphp
                                     <span class="badge bg-{{ $msStatus['class'] }}">{{ $msStatus['label'] }}</span>
                                 </td>
