@@ -56,9 +56,9 @@ class PaymentService
      * Deposit funds to a user's platform wallet from a Bhutanese payment provider.
      * In production, this would integrate with the actual payment gateway APIs.
      */
-    public function deposit(User $user, float $amount, string $provider, string $providerRef): Transaction
+    public function deposit(User $user, float $amount, string $provider, string $accountNumber, string $providerRef): Transaction
     {
-        return DB::transaction(function () use ($user, $amount, $provider, $providerRef) {
+        return DB::transaction(function () use ($user, $amount, $provider, $accountNumber, $providerRef) {
             $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
             $balanceBefore = $wallet->available_balance;
 
@@ -79,8 +79,9 @@ class PaymentService
                 'net_amount'               => $amount,
                 'status'                   => 'completed',
                 'payment_provider'         => $provider,
+                'account_number'           => $accountNumber,
                 'payment_provider_ref'     => $providerRef,
-                'notes'                    => "Wallet deposit via " . self::PROVIDERS[$provider]['name'],
+                'notes'                    => "Wallet deposit from {$accountNumber} via " . self::PROVIDERS[$provider]['name'],
                 'balance_before'           => $balanceBefore,
                 'balance_after'            => $wallet->fresh()->available_balance,
                 'ip_address'               => request()->ip(),
@@ -125,6 +126,7 @@ class PaymentService
                 'net_amount'       => $amount,
                 'status'           => 'processing',
                 'payment_provider' => $provider,
+                'account_number'   => $accountNumber,
                 'notes'            => "Withdrawal to {$accountNumber} via " . self::PROVIDERS[$provider]['name'],
                 'balance_before'   => $balanceBefore,
                 'balance_after'    => $wallet->fresh()->available_balance,

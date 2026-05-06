@@ -47,6 +47,15 @@
                     </div>
 
                     <div class="mb-4">
+                        <label class="form-label fw-semibold">Account Number / Mobile Number <span class="text-danger">*</span></label>
+                        <input type="text" name="account_number" class="form-control @error('account_number') is-invalid @enderror"
+                               placeholder="e.g., 1234567890 or 17XXXXXX" value="{{ old('account_number') }}"
+                               maxlength="50" required>
+                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account/mobile number used for this deposit</div>
+                        @error('account_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label fw-semibold">Transaction Reference (from your payment app) <span class="text-danger">*</span></label>
                         <input type="text" name="provider_ref" class="form-control @error('provider_ref') is-invalid @enderror" 
                                placeholder="e.g. TXN12345 or REF789456" value="{{ old('provider_ref') }}" 

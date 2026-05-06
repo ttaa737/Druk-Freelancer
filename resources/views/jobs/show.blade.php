@@ -43,22 +43,31 @@
                     </div>
                 </div>
 
-                @if($job->deadline)
+                @if($job->deadline || $job->duration_days)
                 @php
-                    $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
-                    $daysUntilDeadline = now()->diffInDays($job->deadline, absolute: true);
+                    $deadlineIsPast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
+                    $daysUntilDeadline = $job->deadline ? now()->diffInDays($job->deadline, absolute: true) : null;
+                    $completionDate = ($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null;
                 @endphp
                 <div class="alert {{ $deadlineIsPast ? 'alert-danger' : 'alert-warning' }} mb-0 d-flex align-items-center gap-3 py-3">
                     <div>
                         <i class="fa fa-calendar-alt fs-5"></i>
                     </div>
                     <div style="flex: 1;">
-                        <div class="fw-semibold mb-1">Job & Proposal Deadline</div>
+                        @if($job->deadline)
+                        <div class="fw-semibold mb-1">Proposal Deadline</div>
                         <div class="fs-6 fw-bold text-danger">{{ $job->deadline->format('d/m/Y') }}</div>
                         @if(!$deadlineIsPast && $daysUntilDeadline > 0)
-                        <small class="text-muted">{{ $daysUntilDeadline }} {{ str_plural('day', $daysUntilDeadline) }} remaining</small>
+                        <small class="text-muted d-block">{{ $daysUntilDeadline }} {{ str_plural('day', $daysUntilDeadline) }} remaining</small>
                         @elseif($deadlineIsPast)
-                        <small class="text-danger fw-semibold">This deadline has passed</small>
+                        <small class="text-danger fw-semibold d-block">This deadline has passed</small>
+                        @endif
+                        @endif
+                        @if($job->duration_days)
+                        <small class="text-muted d-block mt-1">
+                            <span class="fw-semibold text-body">Job Completion:</span>
+                            {{ $completionDate ? $completionDate->format('d/m/Y') : ('within ' . (int) $job->duration_days . ' days') }}
+                        </small>
                         @endif
                     </div>
                 </div>
@@ -255,20 +264,29 @@
                     </div>
                 </div>
 
-                @if($job->deadline)
+                @if($job->deadline || $job->duration_days)
                 @php
-                    $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
-                    $daysUntilDeadline = now()->diffInDays($job->deadline, absolute: true);
+                    $deadlineIsPast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
+                    $daysUntilDeadline = $job->deadline ? now()->diffInDays($job->deadline, absolute: true) : null;
+                    $completionDate = ($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null;
                 @endphp
                 <div class="alert {{ $deadlineIsPast ? 'alert-danger' : 'alert-warning' }} py-3 px-3 d-flex align-items-center gap-3 mb-3">
                     <i class="fa fa-calendar-alt fs-5"></i>
                     <div style="font-size: 14px;">
-                        <div class="fw-semibold mb-1">Job & Proposal Deadline</div>
+                        @if($job->deadline)
+                        <div class="fw-semibold mb-1">Proposal Deadline</div>
                         <div class="fs-6 fw-bold text-danger">{{ $job->deadline->format('d/m/Y') }}</div>
                         @if(!$deadlineIsPast && $daysUntilDeadline > 0)
-                        <small class="text-muted">{{ $daysUntilDeadline }} {{ str_plural('day', $daysUntilDeadline) }} remaining</small>
+                        <small class="text-muted d-block">{{ $daysUntilDeadline }} {{ str_plural('day', $daysUntilDeadline) }} remaining</small>
                         @elseif($deadlineIsPast)
-                        <small class="text-danger fw-semibold">This deadline has passed</small>
+                        <small class="text-danger fw-semibold d-block">This deadline has passed</small>
+                        @endif
+                        @endif
+                        @if($job->duration_days)
+                        <small class="text-muted d-block mt-1">
+                            <span class="fw-semibold text-body">Job Completion:</span>
+                            {{ $completionDate ? $completionDate->format('d/m/Y') : ('within ' . (int) $job->duration_days . ' days') }}
+                        </small>
                         @endif
                     </div>
                 </div>

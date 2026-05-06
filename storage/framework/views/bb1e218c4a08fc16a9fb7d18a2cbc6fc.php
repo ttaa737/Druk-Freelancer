@@ -2,10 +2,10 @@
     <div class="col-lg-9">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h5 class="card-title mb-1"><i class="fa fa-briefcase me-2"></i>{{ isset($job) ? 'Edit Job Posting' : 'Post a New Job' }}</h5>
-                <p class="text-muted small mb-4">{{ isset($job) ? 'Update' : 'Fill in' }} the details below to {{ isset($job) ? 'update your' : 'create a new' }} job posting</p>
+                <h5 class="card-title mb-1"><i class="fa fa-briefcase me-2"></i><?php echo e(isset($job) ? 'Edit Job Posting' : 'Post a New Job'); ?></h5>
+                <p class="text-muted small mb-4"><?php echo e(isset($job) ? 'Update' : 'Fill in'); ?> the details below to <?php echo e(isset($job) ? 'update your' : 'create a new'); ?> job posting</p>
 
-                @if(!isset($job) && auth()->check() && auth()->user()->verification_status !== 'verified')
+                <?php if(!isset($job) && auth()->check() && auth()->user()->verification_status !== 'verified'): ?>
                 <div class="border border-warning rounded-3 bg-warning bg-opacity-10 p-3 mb-4">
                     <div class="d-flex align-items-start gap-3">
                         <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:42px;height:42px;background:#fff3cd;color:#856404;">
@@ -14,127 +14,184 @@
                         <div class="flex-grow-1">
                             <div class="fw-semibold mb-1">Verification needed before posting</div>
                             <div class="small text-muted mb-2">You can complete the form now, but your job will only be posted after your account is verified.</div>
-                            <a href="{{ route('profile.edit') }}#tab-docs" class="btn btn-warning btn-sm">
+                            <a href="<?php echo e(route('profile.edit')); ?>#tab-docs" class="btn btn-warning btn-sm">
                                 <i class="fa fa-id-card me-1"></i> Go to Verification
                             </a>
                         </div>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
 
-                <form method="POST" action="{{ isset($job) ? route('jobs.update', $job) : route('jobs.store') }}" enctype="multipart/form-data">
-                    @csrf
-                    @if(isset($job)) @method('PUT') @endif
+                <form method="POST" action="<?php echo e(isset($job) ? route('jobs.update', $job) : route('jobs.store')); ?>" enctype="multipart/form-data">
+                    <?php echo csrf_field(); ?>
+                    <?php if(isset($job)): ?> <?php echo method_field('PUT'); ?> <?php endif; ?>
 
-                    {{-- Title --}}
+                    
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Job Title <span class="text-danger">*</span></label>
                         <input type="text" name="title"
-                               class="form-control @error('title') is-invalid @enderror"
-                               value="{{ old('title', $job->title ?? '') }}"
+                               class="form-control <?php $__errorArgs = ['title'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                               value="<?php echo e(old('title', $job->title ?? '')); ?>"
                                placeholder="e.g. Senior Laravel Developer" required>
-                        @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <?php $__errorArgs = ['title'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
-                    {{-- Category + Type --}}
+                    
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Category <span class="text-danger">*</span></label>
-                            <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
+                            <select name="category_id" class="form-select <?php $__errorArgs = ['category_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
                                 <option value="">Select Category</option>
-                                @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ old('category_id', $job->category_id ?? '') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($cat->id); ?>" <?php echo e(old('category_id', $job->category_id ?? '') == $cat->id ? 'selected' : ''); ?>><?php echo e($cat->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
-                            @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <?php $__errorArgs = ['category_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Job Type <span class="text-danger">*</span></label>
-                            <select name="type" class="form-select @error('type') is-invalid @enderror" required>
-                                <option value="fixed"     {{ old('type', $job->type ?? '') == 'fixed'     ? 'selected' : '' }}>Fixed Price</option>
-                                <option value="hourly"    {{ old('type', $job->type ?? '') == 'hourly'    ? 'selected' : '' }}>Hourly Rate</option>
-                                <option value="milestone" {{ old('type', $job->type ?? '') == 'milestone' ? 'selected' : '' }}>Milestone Based</option>
+                            <select name="type" class="form-select <?php $__errorArgs = ['type'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
+                                <option value="fixed"     <?php echo e(old('type', $job->type ?? '') == 'fixed'     ? 'selected' : ''); ?>>Fixed Price</option>
+                                <option value="hourly"    <?php echo e(old('type', $job->type ?? '') == 'hourly'    ? 'selected' : ''); ?>>Hourly Rate</option>
+                                <option value="milestone" <?php echo e(old('type', $job->type ?? '') == 'milestone' ? 'selected' : ''); ?>>Milestone Based</option>
                             </select>
                         </div>
                     </div>
 
-                    {{-- Description --}}
+                    
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Description <span class="text-danger">*</span></label>
                         <textarea name="description" rows="8" required
-                                  class="form-control @error('description') is-invalid @enderror"
-                                  placeholder="Describe the project, requirements, and what you expect from freelancers...">{{ old('description', $job->description ?? '') }}</textarea>
-                        @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                  class="form-control <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                  placeholder="Describe the project, requirements, and what you expect from freelancers..."><?php echo e(old('description', $job->description ?? '')); ?></textarea>
+                        <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
 
-                    {{-- Budget + Deadline --}}
+                    
                           <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Budget Min (Nu.)</label>
                             <input type="number" name="budget_min" min="300" max="500000" class="form-control"
-                                   value="{{ old('budget_min', $job->budget_min ?? '') }}"
+                                   value="<?php echo e(old('budget_min', $job->budget_min ?? '')); ?>"
                             placeholder="e.g. 300">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Budget Max (Nu.)</label>
                             <input type="number" name="budget_max" min="300" max="500000" class="form-control"
-                                value="{{ old('budget_max', $job->budget_max ?? '') }}"
+                                value="<?php echo e(old('budget_max', $job->budget_max ?? '')); ?>"
                                 placeholder="e.g. 500000">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Deadline</label>
-                            {{-- Flatpickr calendar picker with dd/mm/yyyy format --}}
+                            
                             <input type="text" id="deadline_picker" class="form-control" placeholder="dd/mm/yyyy">
-                            {{-- Hidden input submitted to server in dd/mm/YYYY format --}}
-                            <input type="hidden" name="deadline" id="deadline" value="{{ old('deadline', optional($job->deadline ?? null)->format('d/m/Y')) }}">
+                            
+                            <input type="hidden" name="deadline" id="deadline" value="<?php echo e(old('deadline', optional($job->deadline ?? null)->format('d/m/Y'))); ?>">
                             <div id="deadlineError" class="invalid-feedback d-none"></div>
                             <small class="form-text text-muted">Select a deadline (dd/mm/yyyy)</small>
-                            @error('deadline')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <?php $__errorArgs = ['deadline'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
 
-                    {{-- Location + Experience --}}
+                    
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Location (Dzongkhag)</label>
                             <select name="dzongkhag" class="form-select">
                                 <option value="">Remote / Any</option>
-                                @foreach(\App\Models\Profile::DZONGKHAGS as $dz)
-                                <option value="{{ $dz }}" {{ old('dzongkhag', $job->dzongkhag ?? '') == $dz ? 'selected' : '' }}>{{ $dz }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = \App\Models\Profile::DZONGKHAGS; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dz): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($dz); ?>" <?php echo e(old('dzongkhag', $job->dzongkhag ?? '') == $dz ? 'selected' : ''); ?>><?php echo e($dz); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Experience Level</label>
                             <select name="experience_level" class="form-select">
                                 <option value="">Any Level</option>
-                                <option value="entry"        {{ old('experience_level', $job->experience_level ?? '') == 'entry'        ? 'selected' : '' }}>Entry Level</option>
-                                <option value="intermediate" {{ old('experience_level', $job->experience_level ?? '') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                                <option value="expert"       {{ old('experience_level', $job->experience_level ?? '') == 'expert'       ? 'selected' : '' }}>Expert</option>
+                                <option value="entry"        <?php echo e(old('experience_level', $job->experience_level ?? '') == 'entry'        ? 'selected' : ''); ?>>Entry Level</option>
+                                <option value="intermediate" <?php echo e(old('experience_level', $job->experience_level ?? '') == 'intermediate' ? 'selected' : ''); ?>>Intermediate</option>
+                                <option value="expert"       <?php echo e(old('experience_level', $job->experience_level ?? '') == 'expert'       ? 'selected' : ''); ?>>Expert</option>
                             </select>
                         </div>
                     </div>
 
-                    {{-- Skills --}}
+                    
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Required Skills <span class="text-muted">(Select all that apply)</span></label>
                         <div class="border rounded p-3" style="background: #f8f9fa;">
                             <input type="text" id="skillSearch" placeholder="Search skills..." 
                                    class="form-control form-control-sm mb-2">
                             <div class="row g-2" id="skillsGrid" style="max-height: 300px; overflow-y: auto;">
-                                @foreach($skills as $skill)
-                                <div class="col-6 col-md-4 col-lg-3 skill-item" data-skill-name="{{ strtolower($skill->name) }}">
+                                <?php $__currentLoopData = $skills; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $skill): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="col-6 col-md-4 col-lg-3 skill-item" data-skill-name="<?php echo e(strtolower($skill->name)); ?>">
                                     <div class="form-check">
-                                        <input type="checkbox" name="skills[]" value="{{ $skill->id }}"
-                                               id="skill_{{ $skill->id }}"
+                                        <input type="checkbox" name="skills[]" value="<?php echo e($skill->id); ?>"
+                                               id="skill_<?php echo e($skill->id); ?>"
                                                class="form-check-input"
-                                               {{ in_array($skill->id, old('skills', isset($job) ? $job->skills->pluck('id')->toArray() : [])) ? 'checked' : '' }}>
-                                        <label class="form-check-label small" for="skill_{{ $skill->id }}">
-                                            {{ $skill->name }}
+                                               <?php echo e(in_array($skill->id, old('skills', isset($job) ? $job->skills->pluck('id')->toArray() : [])) ? 'checked' : ''); ?>>
+                                        <label class="form-check-label small" for="skill_<?php echo e($skill->id); ?>">
+                                            <?php echo e($skill->name); ?>
+
                                         </label>
                                     </div>
                                 </div>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </div>
                             <div id="noSkillsFound" class="text-center py-3 text-muted small d-none">
                                 No skills found matching your search
@@ -143,50 +200,51 @@
                         <small class="form-text text-muted">Select skills that are required or preferred for this job</small>
                     </div>
 
-                    {{-- Attachments --}}
+                    
                     <div class="mb-4">
                         <label class="form-label small fw-semibold">Attachments <span class="text-muted">(Optional)</span></label>
                            <input type="file" name="attachments[]" id="jobAttachments" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                               class="form-control" data-temp-upload-url="{{ route('jobs.attachments.temp') }}">
+                               class="form-control" data-temp-upload-url="<?php echo e(route('jobs.attachments.temp')); ?>">
                            <small class="form-text text-muted d-block mt-1">Files are uploaded as drafts, so refreshing the page will not remove them.</small>
                            <div id="attachmentPreview" class="mt-2 d-flex flex-wrap gap-2"></div>
                            <div id="tempAttachmentsInputs"></div>
                     </div>
 
-                    {{-- Actions --}}
+                    
                     <div class="d-flex gap-2 pt-3">
-                        @if(isset($job) || auth()->user()->verification_status === 'verified')
+                        <?php if(isset($job) || auth()->user()->verification_status === 'verified'): ?>
                         <button type="submit" class="btn btn-primary">
                             <i class="fa fa-save me-1"></i>
-                            {{ isset($job) ? 'Update Job' : 'Post Job' }}
+                            <?php echo e(isset($job) ? 'Update Job' : 'Post Job'); ?>
+
                         </button>
-                        @else
+                        <?php else: ?>
                         <button type="button" class="btn btn-primary" disabled>
                             <i class="fa fa-save me-1"></i>
                             Post Job
                         </button>
-                        @endif
-                        <a href="{{ route('jobs.my') }}" class="btn btn-outline-secondary">
+                        <?php endif; ?>
+                        <a href="<?php echo e(route('jobs.my')); ?>" class="btn btn-outline-secondary">
                             Cancel
                         </a>
                     </div>
 
-                    @if(!isset($job) && auth()->check() && auth()->user()->verification_status !== 'verified')
+                    <?php if(!isset($job) && auth()->check() && auth()->user()->verification_status !== 'verified'): ?>
                     <div class="alert alert-info mt-3 mb-0 py-2 px-3 small d-flex align-items-center justify-content-between flex-wrap gap-2">
                         <div>
                             <i class="fa fa-info-circle me-1"></i>
                             Verify your account to enable job posting.
                         </div>
-                        <a href="{{ route('profile.edit') }}#tab-docs" class="fw-semibold text-decoration-none">Open Verification</a>
+                        <a href="<?php echo e(route('profile.edit')); ?>#tab-docs" class="fw-semibold text-decoration-none">Open Verification</a>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('skillSearch');
@@ -279,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
             for (const file of files) {
                 try {
                     const formData = new FormData();
-                    formData.append('_token', '{{ csrf_token() }}');
+                    formData.append('_token', '<?php echo e(csrf_token()); ?>');
                     formData.append('attachment', file);
 
                     const response = await fetch(uploadUrl, {
@@ -344,13 +402,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -431,4 +489,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+<?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views\jobs\_form.blade.php ENDPATH**/ ?>

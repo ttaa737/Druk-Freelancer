@@ -1,6 +1,5 @@
-@extends('layouts.app')
-@section('title', 'My Wallet')
-@section('content')
+<?php $__env->startSection('title', 'My Wallet'); ?>
+<?php $__env->startSection('content'); ?>
 <h4 class="fw-bold mb-4">My Wallet</h4>
 <div class="row g-3 mb-4">
     <div class="col-md-4">
@@ -10,7 +9,7 @@
                     <i class="fa fa-wallet fa-2x opacity-75"></i>
                     <div>
                         <div class="small opacity-75">Available Balance</div>
-                        <div class="fw-bold fs-4">Nu. {{ number_format($wallet->available_balance) }}</div>
+                        <div class="fw-bold fs-4">Nu. <?php echo e(number_format($wallet->available_balance)); ?></div>
                     </div>
                 </div>
             </div>
@@ -23,7 +22,7 @@
                     <i class="fa fa-lock fa-2x opacity-75"></i>
                     <div>
                         <div class="small opacity-75">In Escrow</div>
-                        <div class="fw-bold fs-4">Nu. {{ number_format($wallet->escrow_balance) }}</div>
+                        <div class="fw-bold fs-4">Nu. <?php echo e(number_format($wallet->escrow_balance)); ?></div>
                     </div>
                 </div>
             </div>
@@ -36,7 +35,7 @@
                     <i class="fa fa-chart-line fa-2x opacity-75"></i>
                     <div>
                         <div class="small opacity-75">Total Earned</div>
-                        <div class="fw-bold fs-4">Nu. {{ number_format($wallet->total_earned) }}</div>
+                        <div class="fw-bold fs-4">Nu. <?php echo e(number_format($wallet->total_earned)); ?></div>
                     </div>
                 </div>
             </div>
@@ -50,8 +49,8 @@
         <div class="card mb-3">
             <div class="card-body">
                 <h6 class="fw-bold mb-3">Quick Actions</h6>
-                <a href="{{ route('wallet.deposit.form') }}" class="btn btn-success w-100 mb-2"><i class="fa fa-plus me-1"></i>Deposit Funds</a>
-                <a href="{{ route('wallet.withdraw.form') }}" class="btn btn-outline-primary w-100"><i class="fa fa-arrow-up me-1"></i>Withdraw</a>
+                <a href="<?php echo e(route('wallet.deposit.form')); ?>" class="btn btn-success w-100 mb-2"><i class="fa fa-plus me-1"></i>Deposit Funds</a>
+                <a href="<?php echo e(route('wallet.withdraw.form')); ?>" class="btn btn-outline-primary w-100"><i class="fa fa-arrow-up me-1"></i>Withdraw</a>
             </div>
         </div>
 
@@ -61,19 +60,19 @@
                     <h6 class="fw-bold mb-0">Payment Methods</h6>
                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addMethodModal">+ Add</button>
                 </div>
-                @foreach($paymentMethods as $pm)
+                <?php $__currentLoopData = $paymentMethods; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                     <div>
-                        <strong class="small">{{ strtoupper($pm->provider) }}</strong>
-                        @if($pm->account_name) <div class="text-muted" style="font-size:.75rem">{{ $pm->account_name }}</div> @endif
-                        <div class="text-muted" style="font-size:.75rem">••••{{ substr($pm->account_number, -4) }}</div>
+                        <strong class="small"><?php echo e(strtoupper($pm->provider)); ?></strong>
+                        <?php if($pm->account_name): ?> <div class="text-muted" style="font-size:.75rem"><?php echo e($pm->account_name); ?></div> <?php endif; ?>
+                        <div class="text-muted" style="font-size:.75rem">••••<?php echo e(substr($pm->account_number, -4)); ?></div>
                     </div>
-                    @if($pm->is_default) <span class="badge bg-success">Default</span> @endif
+                    <?php if($pm->is_default): ?> <span class="badge bg-success">Default</span> <?php endif; ?>
                 </div>
-                @endforeach
-                @if($paymentMethods->isEmpty())
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php if($paymentMethods->isEmpty()): ?>
                 <p class="text-muted small text-center mt-2">No payment methods added yet.</p>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -83,32 +82,34 @@
         <div class="card">
             <div class="card-body">
                 <h6 class="fw-bold mb-3">Transaction History</h6>
-                @forelse($transactions as $txn)
+                <?php $__empty_1 = true; $__currentLoopData = $transactions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $txn): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <div class="d-flex justify-content-between align-items-center border-bottom py-3">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle p-2 bg-{{ in_array($txn->type, ['deposit','escrow_release']) ? 'success' : 'danger' }} bg-opacity-10">
-                            <i class="fa fa-{{ in_array($txn->type, ['deposit','escrow_release']) ? 'arrow-down text-success' : 'arrow-up text-danger' }}"></i>
+                        <div class="rounded-circle p-2 bg-<?php echo e(in_array($txn->type, ['deposit','escrow_release']) ? 'success' : 'danger'); ?> bg-opacity-10">
+                            <i class="fa fa-<?php echo e(in_array($txn->type, ['deposit','escrow_release']) ? 'arrow-down text-success' : 'arrow-up text-danger'); ?>"></i>
                         </div>
                         <div>
-                            <div class="fw-semibold small">{{ ucwords(str_replace('_', ' ', $txn->type)) }}</div>
-                            <div class="text-muted" style="font-size:.75rem">{{ $txn->transaction_ref }} • {{ $txn->created_at->format('d M Y H:i') }}</div>
-                            @if($txn->account_number)
-                            <div class="text-muted" style="font-size:.75rem">Account: ••••{{ substr($txn->account_number, -4) }}</div>
-                            @endif
-                            @if($txn->description) <div class="text-muted" style="font-size:.75rem">{{ $txn->description }}</div> @endif
+                            <div class="fw-semibold small"><?php echo e(ucwords(str_replace('_', ' ', $txn->type))); ?></div>
+                            <div class="text-muted" style="font-size:.75rem"><?php echo e($txn->transaction_ref); ?> • <?php echo e($txn->created_at->format('d M Y H:i')); ?></div>
+                            <?php if($txn->account_number): ?>
+                            <div class="text-muted" style="font-size:.75rem">Account: ••••<?php echo e(substr($txn->account_number, -4)); ?></div>
+                            <?php endif; ?>
+                            <?php if($txn->description): ?> <div class="text-muted" style="font-size:.75rem"><?php echo e($txn->description); ?></div> <?php endif; ?>
                         </div>
                     </div>
                     <div class="text-end">
-                        <div class="fw-bold {{ in_array($txn->type, ['deposit','escrow_release']) ? 'text-success' : 'text-danger' }}">
-                            {{ in_array($txn->type, ['deposit','escrow_release']) ? '+' : '-' }}Nu. {{ number_format($txn->amount) }}
+                        <div class="fw-bold <?php echo e(in_array($txn->type, ['deposit','escrow_release']) ? 'text-success' : 'text-danger'); ?>">
+                            <?php echo e(in_array($txn->type, ['deposit','escrow_release']) ? '+' : '-'); ?>Nu. <?php echo e(number_format($txn->amount)); ?>
+
                         </div>
-                        <span class="badge bg-{{ $txn->status === 'completed' ? 'success' : ($txn->status === 'pending' ? 'warning text-dark' : 'danger') }}">{{ ucfirst($txn->status) }}</span>
+                        <span class="badge bg-<?php echo e($txn->status === 'completed' ? 'success' : ($txn->status === 'pending' ? 'warning text-dark' : 'danger')); ?>"><?php echo e(ucfirst($txn->status)); ?></span>
                     </div>
                 </div>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <p class="text-muted text-center py-3">No transactions yet.</p>
-                @endforelse
-                {{ $transactions->links() }}
+                <?php endif; ?>
+                <?php echo e($transactions->links()); ?>
+
             </div>
         </div>
     </div>
@@ -122,16 +123,16 @@
                 <h5 class="modal-title">Add Payment Method</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ route('wallet.payment-method.add') }}">
-                @csrf
+            <form method="POST" action="<?php echo e(route('wallet.payment-method.add')); ?>">
+                <?php echo csrf_field(); ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Payment Provider</label>
                         <select name="provider" class="form-select" required>
                             <option value="">Select Provider</option>
-                            @foreach($providers as $key => $provider)
-                            <option value="{{ $key }}">{{ $provider['name'] }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $providers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $provider): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($key); ?>"><?php echo e($provider['name']); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -155,4 +156,6 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views\wallet\index.blade.php ENDPATH**/ ?>

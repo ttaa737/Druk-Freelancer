@@ -53,6 +53,7 @@ class WalletController extends Controller
         $request->validate([
             'provider'     => 'required|in:' . implode(',', array_keys(PaymentService::PROVIDERS)),
             'amount'       => 'required|numeric|min:100|max:1000000',
+            'account_number' => 'required|string|max:50',
             'provider_ref' => 'required|string|max:100',
         ]);
 
@@ -61,6 +62,7 @@ class WalletController extends Controller
                 Auth::user(),
                 $request->amount,
                 $request->provider,
+                $request->account_number,
                 $request->provider_ref
             );
 

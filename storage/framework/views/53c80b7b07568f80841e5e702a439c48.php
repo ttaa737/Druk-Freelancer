@@ -42,22 +42,32 @@
                     </div>
                 </div>
 
-                <?php if($job->deadline): ?>
+                <?php if($job->deadline || $job->duration_days): ?>
                 <?php
-                    $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
-                    $daysUntilDeadline = now()->diffInDays($job->deadline, absolute: true);
+                    $deadlineIsPast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
+                    $daysUntilDeadline = $job->deadline ? now()->diffInDays($job->deadline, absolute: true) : null;
+                    $completionDate = ($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null;
                 ?>
                 <div class="alert <?php echo e($deadlineIsPast ? 'alert-danger' : 'alert-warning'); ?> mb-0 d-flex align-items-center gap-3 py-3">
                     <div>
                         <i class="fa fa-calendar-alt fs-5"></i>
                     </div>
                     <div style="flex: 1;">
-                        <div class="fw-semibold mb-1">Job & Proposal Deadline</div>
+                        <?php if($job->deadline): ?>
+                        <div class="fw-semibold mb-1">Proposal Deadline</div>
                         <div class="fs-6 fw-bold text-danger"><?php echo e($job->deadline->format('d/m/Y')); ?></div>
                         <?php if(!$deadlineIsPast && $daysUntilDeadline > 0): ?>
-                        <small class="text-muted"><?php echo e($daysUntilDeadline); ?> <?php echo e(str_plural('day', $daysUntilDeadline)); ?> remaining</small>
+                        <small class="text-muted d-block"><?php echo e($daysUntilDeadline); ?> <?php echo e(str_plural('day', $daysUntilDeadline)); ?> remaining</small>
                         <?php elseif($deadlineIsPast): ?>
-                        <small class="text-danger fw-semibold">This deadline has passed</small>
+                        <small class="text-danger fw-semibold d-block">This deadline has passed</small>
+                        <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if($job->duration_days): ?>
+                        <small class="text-muted d-block mt-1">
+                            <span class="fw-semibold text-body">Job Completion:</span>
+                            <?php echo e($completionDate ? $completionDate->format('d/m/Y') : ('within ' . (int) $job->duration_days . ' days')); ?>
+
+                        </small>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -279,20 +289,30 @@ unset($__errorArgs, $__bag); ?>
                     </div>
                 </div>
 
-                <?php if($job->deadline): ?>
+                <?php if($job->deadline || $job->duration_days): ?>
                 <?php
-                    $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
-                    $daysUntilDeadline = now()->diffInDays($job->deadline, absolute: true);
+                    $deadlineIsPast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
+                    $daysUntilDeadline = $job->deadline ? now()->diffInDays($job->deadline, absolute: true) : null;
+                    $completionDate = ($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null;
                 ?>
                 <div class="alert <?php echo e($deadlineIsPast ? 'alert-danger' : 'alert-warning'); ?> py-3 px-3 d-flex align-items-center gap-3 mb-3">
                     <i class="fa fa-calendar-alt fs-5"></i>
                     <div style="font-size: 14px;">
-                        <div class="fw-semibold mb-1">Job & Proposal Deadline</div>
+                        <?php if($job->deadline): ?>
+                        <div class="fw-semibold mb-1">Proposal Deadline</div>
                         <div class="fs-6 fw-bold text-danger"><?php echo e($job->deadline->format('d/m/Y')); ?></div>
                         <?php if(!$deadlineIsPast && $daysUntilDeadline > 0): ?>
-                        <small class="text-muted"><?php echo e($daysUntilDeadline); ?> <?php echo e(str_plural('day', $daysUntilDeadline)); ?> remaining</small>
+                        <small class="text-muted d-block"><?php echo e($daysUntilDeadline); ?> <?php echo e(str_plural('day', $daysUntilDeadline)); ?> remaining</small>
                         <?php elseif($deadlineIsPast): ?>
-                        <small class="text-danger fw-semibold">This deadline has passed</small>
+                        <small class="text-danger fw-semibold d-block">This deadline has passed</small>
+                        <?php endif; ?>
+                        <?php endif; ?>
+                        <?php if($job->duration_days): ?>
+                        <small class="text-muted d-block mt-1">
+                            <span class="fw-semibold text-body">Job Completion:</span>
+                            <?php echo e($completionDate ? $completionDate->format('d/m/Y') : ('within ' . (int) $job->duration_days . ' days')); ?>
+
+                        </small>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -409,4 +429,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views/jobs/show.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views\jobs\show.blade.php ENDPATH**/ ?>

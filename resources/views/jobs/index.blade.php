@@ -81,15 +81,26 @@
                             <span class="me-3"><i class="fa fa-clock me-1"></i>{{ $job->created_at->diffForHumans() }}</span>
                         </div>
                         <p class="text-muted small mb-2">{{ Str::limit($job->description, 150) }}</p>
-                        @if($job->deadline)
+                        @if($job->deadline || $job->duration_days)
                         @php
-                            $deadlineIsPast = $job->deadline->isToday() || $job->deadline->isPast();
+                            $deadlineIsPast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
+                            $completionDate = ($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null;
                         @endphp
                         <div class="small mb-2 {{ $deadlineIsPast ? 'text-danger fw-semibold' : 'text-muted' }}">
-                            <i class="fa fa-calendar-alt me-1"></i>
-                            Proposal deadline: {{ $job->deadline->format('d/m/Y') }}
-                            @if($deadlineIsPast)
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">Due now</span>
+                            @if($job->deadline)
+                            <div>
+                                <i class="fa fa-calendar-alt me-1"></i>
+                                Proposal deadline: {{ $job->deadline->format('d/m/Y') }}
+                                @if($deadlineIsPast)
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">Due now</span>
+                                @endif
+                            </div>
+                            @endif
+                            @if($job->duration_days)
+                            <div class="mt-1">
+                                <i class="fa fa-flag-checkered me-1"></i>
+                                Job completion: {{ $completionDate ? $completionDate->format('d/m/Y') : ('within ' . (int) $job->duration_days . ' days') }}
+                            </div>
                             @endif
                         </div>
                         @endif
