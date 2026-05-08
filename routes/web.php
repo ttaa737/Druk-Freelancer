@@ -200,7 +200,7 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         // Verifications
         Route::prefix('verifications')->name('verifications.')->group(function () {
             Route::get('/', [AdminVerificationController::class, 'index'])->name('index');
-            Route::get('/{document}', [AdminVerificationController::class, 'show'])->name('show');
+            Route::get('/{user}', [AdminVerificationController::class, 'show'])->name('show');
             Route::post('/{document}/approve', [AdminVerificationController::class, 'approve'])->name('approve');
             Route::post('/{document}/reject', [AdminVerificationController::class, 'reject'])->name('reject');
         });

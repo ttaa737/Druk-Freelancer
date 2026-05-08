@@ -18,24 +18,41 @@ class AdminVerificationController extends Controller
 
     public function index(Request $request)
     {
-        $query = VerificationDocument::with('user.profile');
+        $query = \App\Models\User::with('verificationDocuments');
 
+        // Filter by status of user's documents
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'pending') {
+                $query->whereHas('verificationDocuments', function ($q) {
+                    $q->where('status', 'pending');
+                });
+            } elseif ($request->status === 'approved') {
+                $query->whereHas('verificationDocuments', function ($q) {
+                    $q->where('status', 'approved');
+                });
+            } elseif ($request->status === 'rejected') {
+                $query->whereHas('verificationDocuments', function ($q) {
+                    $q->where('status', 'rejected');
+                });
+            }
         } else {
-            $query->where('status', 'pending');
+            // Default: show users with pending documents
+            $query->whereHas('verificationDocuments', function ($q) {
+                $q->where('status', 'pending');
+            });
         }
 
-        $documents = $query->latest()->paginate(20)->withQueryString();
+        // Group by unique users
+        $users = $query->latest()->paginate(15)->withQueryString();
 
-        return view('admin.verifications.index', compact('documents'));
+        return view('admin.verifications.index', compact('users'));
     }
 
-    public function show(VerificationDocument $document)
+    public function show(\App\Models\User $user)
     {
-        $document->load('user.profile');
+        $user->load('verificationDocuments', 'profile');
 
-        return view('admin.verifications.show', compact('document'));
+        return view('admin.verifications.show', compact('user'));
     }
 
     public function approve(Request $request, VerificationDocument $document)
