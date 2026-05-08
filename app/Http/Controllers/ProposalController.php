@@ -39,13 +39,8 @@ class ProposalController extends Controller
             'bid_amount'             => [
                 'required',
                 'numeric',
-                'min:100',
-                'max:9999999',
-                function ($attribute, $value, $fail) use ($job) {
-                    if ($job->budget_max && $value > $job->budget_max) {
-                        $fail("Bid amount cannot exceed the maximum budget of Nu. " . number_format($job->budget_max) . " for this job.");
-                    }
-                },
+                'min:300',
+                'max:500000',
             ],
             'delivery_days'          => 'required|integer|min:1|max:365',
             'milestones'             => 'nullable|array|min:1|max:10',

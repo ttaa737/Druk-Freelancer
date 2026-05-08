@@ -1,6 +1,6 @@
-﻿@extends('layouts.app')
-@section('title', 'Edit Profile')
-@section('content')
+﻿
+<?php $__env->startSection('title', 'Edit Profile'); ?>
+<?php $__env->startSection('content'); ?>
 <div class="row justify-content-center">
     <div class="col-lg-9">
 
@@ -9,24 +9,24 @@
                 <h3 class="mb-1"><i class="fa fa-user-edit text-primary me-2"></i>Edit Profile</h3>
                 <p class="text-muted small mb-0">Update your professional profile and settings</p>
             </div>
-            <a href="{{ route('profile.show', auth()->user()) }}" class="btn btn-outline-secondary">
+            <a href="<?php echo e(route('profile.show', auth()->user())); ?>" class="btn btn-outline-secondary">
                 <i class="fa fa-eye me-2"></i>View Public Profile
             </a>
         </div>
 
-        @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show mb-3"><i class="fa fa-check-circle me-2"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        @endif
-        @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show mb-3"><i class="fa fa-exclamation-circle me-2"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        @endif
-        @if($errors->any())
+        <?php if(session('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show mb-3"><i class="fa fa-check-circle me-2"></i><?php echo e(session('success')); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php endif; ?>
+        <?php if(session('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show mb-3"><i class="fa fa-exclamation-circle me-2"></i><?php echo e(session('error')); ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php endif; ?>
+        <?php if($errors->any()): ?>
         <div class="alert alert-danger alert-dismissible fade show mb-3">
             <strong><i class="fa fa-exclamation-triangle me-2"></i>Please fix the following errors:</strong>
-            <ul class="mb-0 mt-2">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            <ul class="mb-0 mt-2"><?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $e): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><li><?php echo e($e); ?></li><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?></ul>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        @endif
+        <?php endif; ?>
 
         <ul class="nav nav-tabs mb-4" id="profileTabs">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-personal"><i class="fa fa-user me-1"></i>Personal Info</a></li>
@@ -37,18 +37,18 @@
 
         <div class="tab-content">
 
-            {{-- ── Personal Info ─────────────────────────────────── --}}
+            
             <div class="tab-pane fade show active" id="tab-personal">
                 <div class="card">
                     <div class="card-body p-4">
-                        <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
-                            @csrf @method('PUT')
+                        <form method="POST" action="<?php echo e(route('profile.update')); ?>" enctype="multipart/form-data">
+                            <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
 
-                            {{-- Avatar --}}
+                            
                             <div class="d-flex align-items-start gap-4 mb-4">
                                 <div class="text-center" style="min-width:110px">
                                     <img id="avatarPreview"
-                                         src="{{ auth()->user()->avatar_url }}"
+                                         src="<?php echo e(auth()->user()->avatar_url); ?>"
                                          class="rounded-circle border shadow-sm"
                                          style="width:100px;height:100px;object-fit:cover;"
                                          alt="Your photo">
@@ -61,16 +61,17 @@
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0">{{ auth()->user()->name }}</h6>
-                                    <div class="text-muted small">{{ auth()->user()->email }}</div>
+                                    <h6 class="fw-bold mb-0"><?php echo e(auth()->user()->name); ?></h6>
+                                    <div class="text-muted small"><?php echo e(auth()->user()->email); ?></div>
                                     <div class="mt-1">
-                                        @php
+                                        <?php
                                             $headerVerificationStatus = auth()->user()->verification_status;
                                             $headerVerificationLabel = ($headerVerificationStatus === 'rejected') ? 'Unverified' : ucfirst($headerVerificationStatus ?? 'Unverified');
-                                        @endphp
-                                        <span class="badge bg-{{ auth()->user()->verification_status === 'verified' ? 'success' : 'secondary' }}">
-                                            <i class="fa fa-{{ auth()->user()->verification_status === 'verified' ? 'check-circle' : 'clock' }} me-1"></i>
-                                            {{ $headerVerificationLabel }}
+                                        ?>
+                                        <span class="badge bg-<?php echo e(auth()->user()->verification_status === 'verified' ? 'success' : 'secondary'); ?>">
+                                            <i class="fa fa-<?php echo e(auth()->user()->verification_status === 'verified' ? 'check-circle' : 'clock'); ?> me-1"></i>
+                                            <?php echo e($headerVerificationLabel); ?>
+
                                         </span>
                                     </div>
                                 </div>
@@ -78,134 +79,218 @@
 
                             <hr class="mb-4">
 
-                            {{-- Basic Details --}}
+                            
                             <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px">Basic Details</h6>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                                           value="{{ old('name', auth()->user()->name) }}" required>
-                                    @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <input type="text" name="name" class="form-control <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                           value="<?php echo e(old('name', auth()->user()->name)); ?>" required>
+                                    <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Professional Headline</label>
-                                    <input type="text" name="headline" class="form-control @error('headline') is-invalid @enderror"
-                                           value="{{ old('headline', auth()->user()->profile?->headline) }}"
+                                    <input type="text" name="headline" class="form-control <?php $__errorArgs = ['headline'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                           value="<?php echo e(old('headline', auth()->user()->profile?->headline)); ?>"
                                            placeholder="e.g. Full Stack Developer | Graphic Designer">
-                                    @error('headline')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <?php $__errorArgs = ['headline'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Phone Number</label>
                                     <div class="input-group">
                                         <span class="input-group-text text-muted small">+975</span>
-                                        <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                               value="{{ old('phone', auth()->user()->phone) }}"
+                                        <input type="tel" name="phone" class="form-control <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                               value="<?php echo e(old('phone', auth()->user()->phone)); ?>"
                                                placeholder="17XXXXXX">
                                     </div>
-                                    @error('phone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                    <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Hourly Rate (Nu.)</label>
                                     <div class="input-group">
                                         <span class="input-group-text text-muted small">Nu.</span>
-                                        <input type="number" name="hourly_rate" class="form-control @error('hourly_rate') is-invalid @enderror"
-                                               value="{{ old('hourly_rate', auth()->user()->profile?->hourly_rate) }}" min="0">
+                                        <input type="number" name="hourly_rate" class="form-control <?php $__errorArgs = ['hourly_rate'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                               value="<?php echo e(old('hourly_rate', auth()->user()->profile?->hourly_rate)); ?>" min="0">
                                     </div>
-                                    @error('hourly_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <?php $__errorArgs = ['hourly_rate'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Years of Experience</label>
                                     <input type="number" name="experience_years" class="form-control"
-                                           value="{{ old('experience_years', auth()->user()->profile?->experience_years) }}"
+                                           value="<?php echo e(old('experience_years', auth()->user()->profile?->experience_years)); ?>"
                                            min="0" max="60" placeholder="e.g. 3">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Availability</label>
                                     <select name="availability" class="form-select">
                                         <option value="">Select...</option>
-                                        <option value="available" @selected(old('availability', auth()->user()->profile?->availability) === 'available')>Available for Work</option>
-                                        <option value="busy" @selected(old('availability', auth()->user()->profile?->availability) === 'busy')>Busy / Limited Availability</option>
-                                        <option value="not_available" @selected(old('availability', auth()->user()->profile?->availability) === 'not_available')>Not Available</option>
+                                        <option value="available" <?php if(old('availability', auth()->user()->profile?->availability) === 'available'): echo 'selected'; endif; ?>>Available for Work</option>
+                                        <option value="busy" <?php if(old('availability', auth()->user()->profile?->availability) === 'busy'): echo 'selected'; endif; ?>>Busy / Limited Availability</option>
+                                        <option value="not_available" <?php if(old('availability', auth()->user()->profile?->availability) === 'not_available'): echo 'selected'; endif; ?>>Not Available</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-semibold">Bio / About Me</label>
-                                    <textarea name="bio" class="form-control @error('bio') is-invalid @enderror" rows="4"
-                                              placeholder="Tell clients about your experience, skills, and what makes you unique...">{{ old('bio', auth()->user()->profile?->bio) }}</textarea>
-                                    @error('bio')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <textarea name="bio" class="form-control <?php $__errorArgs = ['bio'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" rows="4"
+                                              placeholder="Tell clients about your experience, skills, and what makes you unique..."><?php echo e(old('bio', auth()->user()->profile?->bio)); ?></textarea>
+                                    <?php $__errorArgs = ['bio'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                     <div class="text-muted" style="font-size:11px">Max 1000 characters</div>
                                 </div>
                             </div>
 
-                            {{-- Location --}}
+                            
                             <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px">Location</h6>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Dzongkhag</label>
                                     <select name="dzongkhag" class="form-select">
                                         <option value="">Select Dzongkhag</option>
-                                        @foreach($dzongkhags as $dz)
-                                        <option value="{{ $dz }}" @selected(old('dzongkhag', auth()->user()->profile?->dzongkhag) === $dz)>{{ $dz }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $dzongkhags; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dz): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($dz); ?>" <?php if(old('dzongkhag', auth()->user()->profile?->dzongkhag) === $dz): echo 'selected'; endif; ?>><?php echo e($dz); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Gewog</label>
                                     <input type="text" name="gewog" class="form-control"
-                                           value="{{ old('gewog', auth()->user()->profile?->gewog) }}"
+                                           value="<?php echo e(old('gewog', auth()->user()->profile?->gewog)); ?>"
                                            placeholder="Your gewog">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-semibold">Full Address</label>
                                     <input type="text" name="address" class="form-control"
-                                           value="{{ old('address', auth()->user()->profile?->address) }}"
+                                           value="<?php echo e(old('address', auth()->user()->profile?->address)); ?>"
                                            placeholder="Street / village, town">
                                 </div>
                             </div>
 
-                            {{-- Online Presence --}}
+                            
                             <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px">Online Presence</h6>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Website / Portfolio URL</label>
-                                    <input type="url" name="website" class="form-control @error('website') is-invalid @enderror"
-                                           value="{{ old('website', auth()->user()->profile?->website) }}"
+                                    <input type="url" name="website" class="form-control <?php $__errorArgs = ['website'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                           value="<?php echo e(old('website', auth()->user()->profile?->website)); ?>"
                                            placeholder="https://yoursite.com">
-                                    @error('website')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <?php $__errorArgs = ['website'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Preferred Language</label>
                                     <select name="preferred_language" class="form-select">
-                                        <option value="en" @selected(old('preferred_language', auth()->user()->preferred_language) === 'en')>English</option>
-                                        <option value="dz" @selected(old('preferred_language', auth()->user()->preferred_language) === 'dz')>Dzongkha</option>
+                                        <option value="en" <?php if(old('preferred_language', auth()->user()->preferred_language) === 'en'): echo 'selected'; endif; ?>>English</option>
+                                        <option value="dz" <?php if(old('preferred_language', auth()->user()->preferred_language) === 'dz'): echo 'selected'; endif; ?>>Dzongkha</option>
                                     </select>
                                 </div>
                             </div>
 
-                            @if(auth()->user()->isJobPoster())
-                            {{-- Company Info --}}
+                            <?php if(auth()->user()->isJobPoster()): ?>
+                            
                             <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px">Company / Organisation</h6>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Company Name</label>
                                     <input type="text" name="company_name" class="form-control"
-                                           value="{{ old('company_name', auth()->user()->profile?->company_name) }}"
+                                           value="<?php echo e(old('company_name', auth()->user()->profile?->company_name)); ?>"
                                            placeholder="e.g. Druk Holdings & Investments">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold">Industry</label>
                                     <input type="text" name="industry" class="form-control"
-                                           value="{{ old('industry', auth()->user()->profile?->industry) }}"
+                                           value="<?php echo e(old('industry', auth()->user()->profile?->industry)); ?>"
                                            placeholder="e.g. Technology, Finance">
                                 </div>
                             </div>
-                            @endif
+                            <?php endif; ?>
 
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-primary px-4">
                                     <i class="fa fa-save me-1"></i>Save Changes
                                 </button>
-                                <a href="{{ route('profile.show', auth()->user()) }}" class="btn btn-outline-secondary">
+                                <a href="<?php echo e(route('profile.show', auth()->user())); ?>" class="btn btn-outline-secondary">
                                     <i class="fa fa-eye me-1"></i>View Profile
                                 </a>
                             </div>
@@ -214,42 +299,42 @@
                 </div>
             </div>
 
-            {{-- ── Skills ─────────────────────────────────────────── --}}
+            
             <div class="tab-pane fade" id="tab-skills">
                 <div class="card">
                     <div class="card-body p-4">
-                        <form method="POST" action="{{ route('profile.update') }}">
-                            @csrf @method('PUT')
+                        <form method="POST" action="<?php echo e(route('profile.update')); ?>">
+                            <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
                             <p class="text-muted small mb-4">Select the skills that best describe your expertise. Your skills appear on your public profile and help clients find you.</p>
-                            @if($categories->isEmpty())
+                            <?php if($categories->isEmpty()): ?>
                             <div class="text-center text-muted py-4"><i class="fa fa-info-circle me-1"></i>No skills available yet.</div>
-                            @else
-                            @foreach($categories as $category)
+                            <?php else: ?>
+                            <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="mb-4">
-                                <h6 class="fw-bold mb-2 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px">{{ $category->name }}</h6>
+                                <h6 class="fw-bold mb-2 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px"><?php echo e($category->name); ?></h6>
                                 <div class="row g-2">
-                                    @foreach($category->skills as $skill)
+                                    <?php $__currentLoopData = $category->skills; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $skill): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <div class="col-sm-4 col-md-3">
-                                        <div class="form-check border rounded px-3 py-2 {{ auth()->user()->skills->contains($skill->id) ? 'border-primary bg-primary bg-opacity-10' : '' }}">
+                                        <div class="form-check border rounded px-3 py-2 <?php echo e(auth()->user()->skills->contains($skill->id) ? 'border-primary bg-primary bg-opacity-10' : ''); ?>">
                                             <input class="form-check-input" type="checkbox"
-                                                   name="skills[]" value="{{ $skill->id }}"
-                                                   id="skill{{ $skill->id }}"
-                                                   @checked(in_array($skill->id, old('skills', auth()->user()->skills->pluck('id')->toArray())))>
-                                            <label class="form-check-label small" for="skill{{ $skill->id }}">{{ $skill->name }}</label>
+                                                   name="skills[]" value="<?php echo e($skill->id); ?>"
+                                                   id="skill<?php echo e($skill->id); ?>"
+                                                   <?php if(in_array($skill->id, old('skills', auth()->user()->skills->pluck('id')->toArray()))): echo 'checked'; endif; ?>>
+                                            <label class="form-check-label small" for="skill<?php echo e($skill->id); ?>"><?php echo e($skill->name); ?></label>
                                         </div>
                                     </div>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
                             </div>
-                            @endforeach
-                            @endif
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php endif; ?>
                             <button type="submit" class="btn btn-primary"><i class="fa fa-save me-1"></i>Update Skills</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            {{-- ── Verification Docs ──────────────────────────────── --}}
+            
             <div class="tab-pane fade" id="tab-docs">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-primary bg-gradient text-white py-3">
@@ -262,8 +347,8 @@
                         </div>
                     </div>
                     <div class="card-body p-4">
-                        {{-- Verification Status Banner --}}
-                        @php
+                        
+                        <?php
                             $verificationStatus = auth()->user()->verification_status ?? 'unverified';
                             $verificationLabel = $verificationStatus === 'rejected' ? 'Unverified' : ucfirst($verificationStatus);
                             $statusMeta = [
@@ -272,23 +357,23 @@
                                 'rejected' => ['class' => 'secondary', 'icon' => 'times-circle', 'title' => 'Unverified account', 'text' => 'Your account is currently unverified. Please review feedback and resubmit the required documents.'],
                                 'default' => ['class' => 'info', 'icon' => 'info-circle', 'title' => 'Verification not started', 'text' => 'Upload your documents below to complete your identity verification and unlock more features.'],
                             ][$verificationStatus] ?? ['class' => 'info', 'icon' => 'info-circle', 'title' => 'Verification not started', 'text' => 'Upload your documents below to complete your identity verification and unlock more features.'];
-                        @endphp
-                        <div class="border rounded-3 p-4 mb-4 bg-{{ $statusMeta['class'] }} bg-opacity-10 border-{{ $statusMeta['class'] }}">
+                        ?>
+                        <div class="border rounded-3 p-4 mb-4 bg-<?php echo e($statusMeta['class']); ?> bg-opacity-10 border-<?php echo e($statusMeta['class']); ?>">
                             <div class="d-flex align-items-start gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 bg-white border border-{{ $statusMeta['class'] }}" style="width:52px;height:52px;">
-                                    <i class="fa fa-{{ $statusMeta['icon'] }} text-{{ $statusMeta['class'] }} fs-5"></i>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 bg-white border border-<?php echo e($statusMeta['class']); ?>" style="width:52px;height:52px;">
+                                    <i class="fa fa-<?php echo e($statusMeta['icon']); ?> text-<?php echo e($statusMeta['class']); ?> fs-5"></i>
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                                        <h6 class="fw-bold mb-0">{{ $statusMeta['title'] }}</h6>
-                                        <span class="badge bg-{{ $statusMeta['class'] }} text-uppercase">{{ $verificationLabel }}</span>
+                                        <h6 class="fw-bold mb-0"><?php echo e($statusMeta['title']); ?></h6>
+                                        <span class="badge bg-<?php echo e($statusMeta['class']); ?> text-uppercase"><?php echo e($verificationLabel); ?></span>
                                     </div>
-                                    <p class="mb-0 text-muted small">{{ $statusMeta['text'] }}</p>
+                                    <p class="mb-0 text-muted small"><?php echo e($statusMeta['text']); ?></p>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Benefits Section --}}
+                        
                         <div class="mb-4 p-3 bg-light rounded-3 border">
                             <h6 class="fw-bold mb-3"><i class="fa fa-star text-warning me-1"></i>Why verify your account</h6>
                             <div class="row g-2 small">
@@ -312,8 +397,8 @@
                         </h6>
                         <p class="text-muted small mb-3">Upload the documents below to complete verification. Accepted files: PDF, JPG, or PNG up to 5 MB.</p>
 
-                        {{-- Document Upload Forms --}}
-                        @php
+                        
+                        <?php
                             $documentTypes = [
                                 [
                                     'type' => 'cid',
@@ -348,71 +433,75 @@
                                     'required' => false
                                 ],
                             ];
-                        @endphp
+                        ?>
 
-                        @foreach($documentTypes as $docType)
-                            @php $doc = auth()->user()->verificationDocuments->where('document_type', $docType['type'])->first(); @endphp
-                            <div class="card mb-3 {{ $doc && $doc->status==='approved' ? 'border-success' : '' }}">
+                        <?php $__currentLoopData = $documentTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $docType): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php $doc = auth()->user()->verificationDocuments->where('document_type', $docType['type'])->first(); ?>
+                            <div class="card mb-3 <?php echo e($doc && $doc->status==='approved' ? 'border-success' : ''); ?>">
                                 <div class="card-header bg-light py-2 px-3">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center">
-                                            <i class="fa {{ $docType['icon'] }} me-2 text-primary"></i>
-                                            <span class="fw-semibold">{{ $docType['label'] }}</span>
-                                            @if($docType['required'])
+                                            <i class="fa <?php echo e($docType['icon']); ?> me-2 text-primary"></i>
+                                            <span class="fw-semibold"><?php echo e($docType['label']); ?></span>
+                                            <?php if($docType['required']): ?>
                                                 <span class="badge bg-danger ms-2" style="font-size:9px">REQUIRED</span>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
-                                        @if($doc)
-                                            <span class="badge bg-{{ $doc->status==='approved' ? 'success' : ($doc->status==='rejected' ? 'danger' : 'warning text-dark') }}">
-                                                <i class="fa fa-{{ $doc->status==='approved' ? 'check-circle' : ($doc->status==='rejected' ? 'times-circle' : 'clock') }} me-1"></i>{{ ucfirst($doc->status) }}
+                                        <?php if($doc): ?>
+                                            <span class="badge bg-<?php echo e($doc->status==='approved' ? 'success' : ($doc->status==='rejected' ? 'danger' : 'warning text-dark')); ?>">
+                                                <i class="fa fa-<?php echo e($doc->status==='approved' ? 'check-circle' : ($doc->status==='rejected' ? 'times-circle' : 'clock')); ?> me-1"></i><?php echo e(ucfirst($doc->status)); ?>
+
                                             </span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="badge bg-secondary">Not Uploaded</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <div class="card-body p-3">
-                                    <p class="text-muted small mb-3">{{ $docType['description'] }}</p>
+                                    <p class="text-muted small mb-3"><?php echo e($docType['description']); ?></p>
                                     
-                                    @if($doc && $doc->status === 'rejected')
+                                    <?php if($doc && $doc->status === 'rejected'): ?>
                                         <div class="alert alert-danger py-2 small mb-3">
                                             <strong><i class="fa fa-exclamation-triangle me-1"></i> Rejection Reason:</strong><br>
-                                            {{ $doc->rejection_reason }}
-                                        </div>
-                                    @endif
+                                            <?php echo e($doc->rejection_reason); ?>
 
-                                    @if($doc && $doc->status === 'approved')
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if($doc && $doc->status === 'approved'): ?>
                                         <div class="d-flex align-items-center text-success">
                                             <i class="fa fa-check-circle me-2 fs-5"></i>
                                             <div>
                                                 <strong>Document Approved</strong><br>
                                                 <small class="text-muted">
-                                                    Verified on {{ $doc->reviewed_at->format('d M Y, h:i A') }}
-                                                    @if($doc->document_number)
-                                                        • {{ $doc->document_number }}
-                                                    @endif
+                                                    Verified on <?php echo e($doc->reviewed_at->format('d M Y, h:i A')); ?>
+
+                                                    <?php if($doc->document_number): ?>
+                                                        • <?php echo e($doc->document_number); ?>
+
+                                                    <?php endif; ?>
                                                 </small>
                                             </div>
                                         </div>
-                                    @elseif($doc && $doc->status === 'pending')
+                                    <?php elseif($doc && $doc->status === 'pending'): ?>
                                         <div class="d-flex align-items-center text-warning">
                                             <i class="fa fa-hourglass-half me-2 fs-5"></i>
                                             <div>
                                                 <strong>Under Review</strong><br>
-                                                <small class="text-muted">Submitted {{ $doc->created_at->diffForHumans() }} • Our team typically reviews within 1-2 business days</small>
+                                                <small class="text-muted">Submitted <?php echo e($doc->created_at->diffForHumans()); ?> • Our team typically reviews within 1-2 business days</small>
                                             </div>
                                         </div>
-                                    @else
-                                        {{-- Upload Form --}}
-                                        <form method="POST" action="{{ route('profile.documents') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
-                                            @csrf
-                                            <input type="hidden" name="document_type" value="{{ $docType['type'] }}">
+                                    <?php else: ?>
+                                        
+                                        <form method="POST" action="<?php echo e(route('profile.documents')); ?>" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                            <?php echo csrf_field(); ?>
+                                            <input type="hidden" name="document_type" value="<?php echo e($docType['type']); ?>">
                                             <div class="row g-3">
                                                 <div class="col-md-4">
                                                     <label class="form-label small fw-semibold">Document Number</label>
                                                     <input type="text" name="document_number" class="form-control form-control-sm" 
-                                                           placeholder="{{ $docType['placeholder'] }}"
-                                                           {{ $docType['type'] === 'cid' ? 'required' : '' }}>
+                                                           placeholder="<?php echo e($docType['placeholder']); ?>"
+                                                           <?php echo e($docType['type'] === 'cid' ? 'required' : ''); ?>>
                                                     <div class="invalid-feedback">Please enter document number.</div>
                                                 </div>
                                                 <div class="col-md-5">
@@ -429,12 +518,12 @@
                                                 </div>
                                             </div>
                                         </form>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        {{-- Instructions --}}
+                        
                         <div class="mt-4 p-3 bg-light rounded">
                             <h6 class="fw-bold mb-2"><i class="fa fa-lightbulb text-warning me-1"></i> Document Guidelines</h6>
                             <ul class="small mb-0 ps-3">
@@ -447,7 +536,7 @@
                             </ul>
                         </div>
 
-                        {{-- Privacy Notice --}}
+                        
                         <div class="alert alert-secondary small mt-3 mb-0">
                             <i class="fa fa-lock me-1"></i> <strong>Privacy Notice:</strong> Your documents are securely stored and only reviewed by authorized administrators. We will never share your personal information with third parties.
                         </div>
@@ -455,51 +544,65 @@
                 </div>
             </div>
 
-            {{-- ── Phone OTP ───────────────────────────────────────── --}}
+            
             <div class="tab-pane fade" id="tab-phone">
                 <div class="card">
                     <div class="card-body p-4">
                         <h6 class="fw-bold mb-1">Phone Verification</h6>
                         <p class="text-muted small mb-4">Verify your Bhutanese mobile number to unlock additional platform features.</p>
 
-                        @if(auth()->user()->phone_verified_at)
+                        <?php if(auth()->user()->phone_verified_at): ?>
                         <div class="alert alert-success mb-0">
-                            <i class="fa fa-check-circle me-2"></i>Phone <strong>{{ auth()->user()->phone }}</strong> verified!
+                            <i class="fa fa-check-circle me-2"></i>Phone <strong><?php echo e(auth()->user()->phone); ?></strong> verified!
                         </div>
-                        @else
-                        @if(!session('phone_otp_sent'))
-                        <form method="POST" action="{{ route('profile.phone.otp') }}">
-                            @csrf
+                        <?php else: ?>
+                        <?php if(!session('phone_otp_sent')): ?>
+                        <form method="POST" action="<?php echo e(route('profile.phone.otp')); ?>">
+                            <?php echo csrf_field(); ?>
                             <div class="mb-3" style="max-width:300px">
                                 <label class="form-label small fw-semibold">Mobile Number</label>
                                 <div class="input-group">
                                     <span class="input-group-text">+975</span>
                                     <input type="tel" name="phone" class="form-control"
-                                           value="{{ old('phone', auth()->user()->phone) }}"
+                                           value="<?php echo e(old('phone', auth()->user()->phone)); ?>"
                                            placeholder="17XXXXXX" required>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary"><i class="fa fa-sms me-1"></i>Send OTP</button>
                         </form>
-                        @else
-                        <form method="POST" action="{{ route('profile.phone.verify') }}">
-                            @csrf
+                        <?php else: ?>
+                        <form method="POST" action="<?php echo e(route('profile.phone.verify')); ?>">
+                            <?php echo csrf_field(); ?>
                             <p class="text-muted small">Enter the 6-digit code sent to your phone.</p>
                             <div class="mb-3" style="max-width:200px">
                                 <input type="text" name="otp"
-                                       class="form-control text-center fw-bold fs-4 @error('otp') is-invalid @enderror"
+                                       class="form-control text-center fw-bold fs-4 <?php $__errorArgs = ['otp'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
                                        maxlength="6" autofocus placeholder="——————" required>
-                                @error('otp')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <?php $__errorArgs = ['otp'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
                             <button type="submit" class="btn btn-primary"><i class="fa fa-check me-1"></i>Verify Phone</button>
                         </form>
-                        @endif
-                        @endif
+                        <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-        </div>{{-- end tab-content --}}
+        </div>
     </div>
 </div>
 
@@ -518,4 +621,6 @@ function previewAvatar(input) {
     }
 }
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views/profile/edit.blade.php ENDPATH**/ ?>

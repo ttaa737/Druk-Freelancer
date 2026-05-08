@@ -113,6 +113,7 @@ class JobController extends Controller
             'temp_attachment_names' => 'nullable|array|max:5',
             'temp_attachment_names.*' => 'string',
             'deadline'         => 'nullable|date_format:d/m/Y|after:today',
+            'job_deadline'     => 'nullable|date_format:d/m/Y|after:today',
         ]);
 
         $tempAttachments = $validated['temp_attachments'] ?? [];
@@ -221,6 +222,7 @@ class JobController extends Controller
             'skills'           => 'nullable|array',
             'skills.*'         => 'exists:skills,id',
             'deadline'         => 'nullable|date_format:d/m/Y|after:today',
+            'job_deadline'     => 'nullable|date_format:d/m/Y|after:today',
         ]);
 
         $oldValues = $job->toArray();

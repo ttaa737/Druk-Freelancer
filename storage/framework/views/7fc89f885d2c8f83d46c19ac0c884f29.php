@@ -16,8 +16,11 @@
                     <?php endfor; ?>
                     <span class="text-muted small ms-1"><?php echo e(number_format($avgRating, 1)); ?> / 5.0</span>
                 </div>
+                <?php
+                    $verificationLabel = ($user->verification_status === 'rejected') ? 'Unverified' : ucfirst($user->verification_status ?? 'Unverified');
+                ?>
                 <span class="badge <?php echo e($user->verification_status === 'verified' ? 'bg-success' : 'bg-secondary'); ?> mb-3">
-                    <i class="fa fa-<?php echo e($user->verification_status === 'verified' ? 'check' : 'clock'); ?> me-1"></i><?php echo e(ucfirst($user->verification_status)); ?>
+                    <i class="fa fa-<?php echo e($user->verification_status === 'verified' ? 'check' : 'clock'); ?> me-1"></i><?php echo e($verificationLabel); ?>
 
                 </span>
                 <?php if(auth()->guard()->check()): ?>

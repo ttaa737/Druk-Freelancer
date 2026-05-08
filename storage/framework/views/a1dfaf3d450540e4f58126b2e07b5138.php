@@ -126,11 +126,21 @@
                             <div class="d-flex align-items-start gap-2">
                                 <i class="fa fa-shield-alt text-warning mt-1"></i>
                                 <div>
-                                    <div class="fw-semibold mb-1">Verification required</div>
+                                    <div class="fw-semibold mb-1">Unverified</div>
                                     <div class="text-muted mb-2">Your account must be verified before jobs can be published.</div>
                                     <a href="<?php echo e(route('profile.edit')); ?>#tab-docs" class="btn btn-warning btn-sm">
                                         Open Verification
                                     </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <div class="border border-success rounded-3 bg-success bg-opacity-10 mt-2 p-3 small">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="fa fa-check-circle text-success mt-1"></i>
+                                <div>
+                                    <div class="fw-semibold mb-1">Verified</div>
+                                    <div class="text-muted mb-0">Your account is verified and can publish jobs.</div>
                                 </div>
                             </div>
                         </div>

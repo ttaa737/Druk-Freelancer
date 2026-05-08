@@ -117,12 +117,12 @@ unset($__errorArgs, $__bag); ?>
                     </div>
 
                     
-                          <div class="row g-3 mb-3">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Budget Min (Nu.)</label>
                             <input type="number" name="budget_min" min="300" max="500000" class="form-control"
                                    value="<?php echo e(old('budget_min', $job->budget_min ?? '')); ?>"
-                            placeholder="e.g. 300">
+                                   placeholder="e.g. 300">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Budget Max (Nu.)</label>
@@ -131,14 +131,70 @@ unset($__errorArgs, $__bag); ?>
                                 placeholder="e.g. 500000">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Deadline</label>
-                            
-                            <input type="text" id="deadline_picker" class="form-control" placeholder="dd/mm/yyyy">
-                            
-                            <input type="hidden" name="deadline" id="deadline" value="<?php echo e(old('deadline', optional($job->deadline ?? null)->format('d/m/Y'))); ?>">
-                            <div id="deadlineError" class="invalid-feedback d-none"></div>
-                            <small class="form-text text-muted">Select a deadline (dd/mm/yyyy)</small>
+                            <label class="form-label small fw-semibold">Project Duration (Days)</label>
+                            <input type="number" name="duration_days" min="1" max="365" class="form-control <?php $__errorArgs = ['duration_days'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old('duration_days', $job->duration_days ?? '')); ?>"
+                                   placeholder="e.g. 30">
+                            <small class="form-text text-muted">How many days the job should take</small>
+                            <?php $__errorArgs = ['duration_days'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Proposal Deadline</label>
+                            <input type="text" id="proposal_deadline_picker" name="deadline"
+                                   class="form-control <?php $__errorArgs = ['deadline'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   placeholder="dd/mm/yyyy"
+                                   value="<?php echo e(old('deadline', optional($job->deadline ?? null)->format('d/m/Y'))); ?>">
+                            <div id="proposalDeadlineError" class="invalid-feedback d-none"></div>
+                            <small class="form-text text-muted">Last date to submit proposals</small>
                             <?php $__errorArgs = ['deadline'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback d-block"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Job Deadline</label>
+                            <input type="text" id="job_deadline_picker" name="job_deadline"
+                                   class="form-control <?php $__errorArgs = ['job_deadline'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   placeholder="dd/mm/yyyy"
+                                   value="<?php echo e(old('job_deadline', optional($job->job_deadline ?? null)->format('d/m/Y'))); ?>">
+                            <div id="jobDeadlineError" class="invalid-feedback d-none"></div>
+                            <small class="form-text text-muted">Expected completion date for the job</small>
+                            <?php $__errorArgs = ['job_deadline'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -406,84 +462,88 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php $__env->startPush('styles'); ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .form-control-lg { font-size: 1.1rem; padding: 0.75rem; }
+</style>
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const datePicker = document.getElementById('deadline_picker');
-    const hiddenDeadline = document.getElementById('deadline');
-    const deadlineError = document.getElementById('deadlineError');
+    const deadlineFields = [
+        { inputId: 'proposal_deadline_picker', errorId: 'proposalDeadlineError' },
+        { inputId: 'job_deadline_picker', errorId: 'jobDeadlineError' },
+    ];
 
-    function ddmmyyyyToIso(value) {
-        // value: dd/mm/yyyy -> return yyyy-mm-dd
-        if (!value) return '';
+    const form = document.querySelector('form[method="POST"]');
+
+    function ddmmyyyyToDate(value) {
+        if (!value) return null;
         const parts = value.split('/');
-        if (parts.length !== 3) return '';
-        const [d, m, y] = parts;
-        if (d.length !== 2 || m.length !== 2 || y.length !== 4) return '';
-        return `${y}-${m}-${d}`;
+        if (parts.length !== 3) return null;
+        const [day, month, year] = parts;
+        if (day.length !== 2 || month.length !== 2 || year.length !== 4) return null;
+
+        const date = new Date(`${year}-${month}-${day}T00:00:00`);
+        return Number.isNaN(date.getTime()) ? null : date;
     }
 
-    // Initialize Flatpickr calendar with dd/mm/yyyy format
-    if (datePicker && hiddenDeadline) {
-        const minDate = new Date();
-        minDate.setDate(minDate.getDate() + 1); // Tomorrow at minimum
+    function setupPicker(field) {
+        const input = document.getElementById(field.inputId);
+        if (!input) {
+            return;
+        }
 
-        flatpickr(datePicker, {
-            format: 'd/m/Y',
+        const minDate = new Date();
+        minDate.setHours(0, 0, 0, 0);
+        minDate.setDate(minDate.getDate() + 1);
+
+        flatpickr(input, {
             dateFormat: 'd/m/Y',
             minDate: minDate,
-            onChange: function(selectedDates, dateStr) {
-                if (dateStr) {
-                    hiddenDeadline.value = dateStr; // Already in dd/mm/yyyy format from Flatpickr
-                } else {
-                    hiddenDeadline.value = '';
-                }
-            },
-            onReady: function() {
-                // Initialize with existing value if present
-                if (hiddenDeadline && hiddenDeadline.value) {
-                    datePicker.value = hiddenDeadline.value;
-                    this.setDate(hiddenDeadline.value, false);
-                }
-            }
+            defaultDate: input.value || null,
         });
     }
 
-    // Form submission validation
-    if (datePicker && hiddenDeadline) {
-        const form = datePicker.closest('form');
+    deadlineFields.forEach(setupPicker);
+
+    if (form) {
         form.addEventListener('submit', function(e) {
-            deadlineError.classList.add('d-none');
-            deadlineError.classList.remove('d-block');
-
-            const dateStr = hiddenDeadline.value; // dd/mm/yyyy
-            if (!dateStr) {
-                return; // Allow submit if empty (optional field)
-            }
-
-            const iso = ddmmyyyyToIso(dateStr);
-            const selected = new Date(iso + 'T00:00:00');
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
 
-            if (!(selected instanceof Date) || isNaN(selected.getTime())) {
-                e.preventDefault();
-                deadlineError.textContent = 'Invalid date selected.';
-                deadlineError.classList.remove('d-none');
-                deadlineError.classList.add('d-block');
-                return;
-            }
+            for (const field of deadlineFields) {
+                const input = document.getElementById(field.inputId);
+                const error = document.getElementById(field.errorId);
 
-            // Validate date is after today
-            if (selected <= today) {
-                e.preventDefault();
-                deadlineError.textContent = 'Please select a date after today.';
-                deadlineError.classList.remove('d-none');
-                deadlineError.classList.add('d-block');
-                return;
+                if (!input || !error) {
+                    continue;
+                }
+
+                error.classList.add('d-none');
+                error.classList.remove('d-block');
+
+                if (!input.value) {
+                    continue;
+                }
+
+                const selected = ddmmyyyyToDate(input.value);
+                if (!selected) {
+                    e.preventDefault();
+                    error.textContent = 'Invalid date selected.';
+                    error.classList.remove('d-none');
+                    error.classList.add('d-block');
+                    return;
+                }
+
+                if (selected <= today) {
+                    e.preventDefault();
+                    error.textContent = 'Please select a date after today.';
+                    error.classList.remove('d-none');
+                    error.classList.add('d-block');
+                    return;
+                }
             }
         });
     }

@@ -81,27 +81,32 @@
                             <span class="me-3"><i class="fa fa-clock me-1"></i><?php echo e($job->created_at->diffForHumans()); ?></span>
                         </div>
                         <p class="text-muted small mb-2"><?php echo e(Str::limit($job->description, 150)); ?></p>
-                        <?php if($job->deadline || $job->duration_days): ?>
+                        <?php if($job->deadline || $job->job_deadline || $job->duration_days): ?>
                         <?php
-                            $deadlineIsPast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
-                            $completionDate = ($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null;
+                            $proposalDeadlinePast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
+                            $completionDeadline = $job->job_deadline ?: (($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null);
                         ?>
-                        <div class="small mb-2 <?php echo e($deadlineIsPast ? 'text-danger fw-semibold' : 'text-muted'); ?>">
+                        <div class="small mb-2 text-muted">
                             <?php if($job->deadline): ?>
-                            <div>
+                            <div class="<?php echo e($proposalDeadlinePast ? 'text-danger fw-semibold' : ''); ?>">
                                 <i class="fa fa-calendar-alt me-1"></i>
                                 Proposal deadline: <?php echo e($job->deadline->format('d/m/Y')); ?>
 
-                                <?php if($deadlineIsPast): ?>
+                                <?php if($proposalDeadlinePast): ?>
                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">Due now</span>
                                 <?php endif; ?>
                             </div>
                             <?php endif; ?>
-                            <?php if($job->duration_days): ?>
+                            <?php if($completionDeadline): ?>
                             <div class="mt-1">
                                 <i class="fa fa-flag-checkered me-1"></i>
-                                Job completion: <?php echo e($completionDate ? $completionDate->format('d/m/Y') : ('within ' . (int) $job->duration_days . ' days')); ?>
+                                Project deadline: <?php echo e($completionDeadline->format('d/m/Y')); ?>
 
+                            </div>
+                            <?php elseif($job->duration_days): ?>
+                            <div class="mt-1">
+                                <i class="fa fa-flag-checkered me-1"></i>
+                                Job deadline: within <?php echo e((int) $job->duration_days); ?> days
                             </div>
                             <?php endif; ?>
                         </div>

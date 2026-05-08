@@ -1,18 +1,18 @@
-﻿@extends('layouts.app')
-@section('title', 'My Dashboard')
+﻿
+<?php $__env->startSection('title', 'My Dashboard'); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <div>
-        <h5 class="fw-bold mb-0">Welcome back, {{ $user->name }} <span style="font-size:1.2rem"></span></h5>
+        <h5 class="fw-bold mb-0">Welcome back, <?php echo e($user->name); ?> <span style="font-size:1.2rem"></span></h5>
         <span class="text-muted small">Here is what is happening with your freelance account today.</span>
     </div>
-    <a href="{{ route('jobs.index') }}" class="btn btn-primary btn-sm px-3">
+    <a href="<?php echo e(route('jobs.index')); ?>" class="btn btn-primary btn-sm px-3">
         <i class="fa fa-search me-1"></i> Find New Jobs
     </a>
 </div>
 
-{{--  Stats row  --}}
+
 <div class="row g-3 mb-4">
     <div class="col-6 col-xl-3">
         <div class="card stat-card h-100">
@@ -22,7 +22,7 @@
                         <i class="fa fa-file-contract fa-lg" style="color:var(--druk-orange)"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-4 lh-1">{{ $stats['active_contracts'] }}</div>
+                        <div class="fw-bold fs-4 lh-1"><?php echo e($stats['active_contracts']); ?></div>
                         <div class="text-muted small">Active Contracts</div>
                     </div>
                 </div>
@@ -37,7 +37,7 @@
                         <i class="fa fa-paper-plane fa-lg" style="color:#3b82f6"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-4 lh-1">{{ $stats['pending_proposals'] }}</div>
+                        <div class="fw-bold fs-4 lh-1"><?php echo e($stats['pending_proposals']); ?></div>
                         <div class="text-muted small">Pending Proposals</div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                         <i class="fa fa-check-double fa-lg" style="color:#10b981"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-4 lh-1">{{ $stats['completed_contracts'] }}</div>
+                        <div class="fw-bold fs-4 lh-1"><?php echo e($stats['completed_contracts']); ?></div>
                         <div class="text-muted small">Completed</div>
                     </div>
                 </div>
@@ -67,8 +67,8 @@
                         <i class="fa fa-star fa-lg" style="color:var(--druk-gold)"></i>
                     </div>
                     <div>
-                        <div class="fw-bold fs-4 lh-1">{{ number_format($stats['average_rating'],1) }}</div>
-                        <div class="text-muted small">Avg. Rating ({{ $stats['total_reviews'] }})</div>
+                        <div class="fw-bold fs-4 lh-1"><?php echo e(number_format($stats['average_rating'],1)); ?></div>
+                        <div class="text-muted small">Avg. Rating (<?php echo e($stats['total_reviews']); ?>)</div>
                     </div>
                 </div>
             </div>
@@ -76,7 +76,7 @@
     </div>
 </div>
 
-{{--  Wallet + Quick actions  --}}
+
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="card h-100" style="background:linear-gradient(135deg,var(--druk-blue),#2d5a96);color:#fff;border:none">
@@ -87,20 +87,20 @@
                 </div>
                 <div class="mb-2">
                     <div class="opacity-75 small">Available Balance</div>
-                    <div class="fw-bold" style="font-size:1.5rem">Nu. {{ number_format($stats['available_balance']) }}</div>
+                    <div class="fw-bold" style="font-size:1.5rem">Nu. <?php echo e(number_format($stats['available_balance'])); ?></div>
                 </div>
                 <div class="d-flex gap-3 text-center mb-3">
                     <div>
                         <div class="small opacity-75">In Escrow</div>
-                        <div class="fw-semibold small">Nu. {{ number_format($stats['escrow_balance']) }}</div>
+                        <div class="fw-semibold small">Nu. <?php echo e(number_format($stats['escrow_balance'])); ?></div>
                     </div>
                     <div class="border-start border-white opacity-50"></div>
                     <div>
                         <div class="small opacity-75">Total Earned</div>
-                        <div class="fw-semibold small">Nu. {{ number_format($stats['total_earned']) }}</div>
+                        <div class="fw-semibold small">Nu. <?php echo e(number_format($stats['total_earned'])); ?></div>
                     </div>
                 </div>
-                <a href="{{ route('wallet.index') }}" class="btn btn-sm btn-light w-100 fw-semibold">
+                <a href="<?php echo e(route('wallet.index')); ?>" class="btn btn-sm btn-light w-100 fw-semibold">
                     <i class="fa fa-arrow-right me-1"></i>Manage Wallet
                 </a>
             </div>
@@ -112,121 +112,122 @@
                 <h6 class="fw-bold mb-3">Quick Actions</h6>
                 <div class="row g-2">
                     <div class="col-6 col-sm-3">
-                        <a href="{{ route('jobs.index') }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
+                        <a href="<?php echo e(route('jobs.index')); ?>" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
                             <i class="fa fa-search" style="color:var(--druk-orange)"></i>
                             <small>Find Jobs</small>
                         </a>
                     </div>
                     <div class="col-6 col-sm-3">
-                        <a href="{{ route('proposals.my') }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
+                        <a href="<?php echo e(route('proposals.my')); ?>" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
                             <i class="fa fa-paper-plane" style="color:#3b82f6"></i>
                             <small>Proposals</small>
                         </a>
                     </div>
                     <div class="col-6 col-sm-3">
-                        <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
+                        <a href="<?php echo e(route('contracts.index')); ?>" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
                             <i class="fa fa-file-contract" style="color:#10b981"></i>
                             <small>Contracts</small>
                         </a>
                     </div>
                     <div class="col-6 col-sm-3">
-                        <a href="{{ route('messages.index') }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
+                        <a href="<?php echo e(route('messages.index')); ?>" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
                             <i class="fa fa-comments" style="color:var(--druk-gold)"></i>
                             <small>Messages</small>
                         </a>
                     </div>
                 </div>
-                @if($user->verification_status === 'verified')
+                <?php if($user->verification_status === 'verified'): ?>
                 <div class="alert alert-success py-2 px-3 mt-3 mb-0 d-flex align-items-center gap-2" style="font-size:.82rem">
                     <i class="fa fa-check-circle"></i>
                     <div>Your profile is Verified.</div>
                 </div>
-                @else
+                <?php else: ?>
                 <div class="alert alert-warning py-2 px-3 mt-3 mb-0 d-flex align-items-center gap-2" style="font-size:.82rem">
                     <i class="fa fa-exclamation-triangle"></i>
-                    <div>Your profile is Unverified. <a href="{{ route('profile.edit') }}" class="alert-link">Complete verification</a> to access all features.</div>
+                    <div>Your profile is Unverified. <a href="<?php echo e(route('profile.edit')); ?>" class="alert-link">Complete verification</a> to access all features.</div>
                 </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-{{--  Active Contracts + Recent Jobs  --}}
+
 <div class="row g-3 mb-4">
-    {{-- Active Contracts --}}
+    
     <div class="col-lg-6">
         <div class="card h-100">
             <div class="card-header bg-white fw-bold d-flex align-items-center justify-content-between">
                 <span><i class="fa fa-file-contract me-2" style="color:var(--druk-orange)"></i>Active Contracts</span>
-                <a href="{{ route('contracts.index') }}" class="btn btn-sm btn-link p-0 text-decoration-none">View All</a>
+                <a href="<?php echo e(route('contracts.index')); ?>" class="btn btn-sm btn-link p-0 text-decoration-none">View All</a>
             </div>
             <div class="card-body p-0">
-                @forelse($activeContracts as $contract)
-                <a href="{{ route('contracts.show', $contract) }}" class="d-block px-3 py-2 text-decoration-none border-bottom text-dark">
+                <?php $__empty_1 = true; $__currentLoopData = $activeContracts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $contract): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <a href="<?php echo e(route('contracts.show', $contract)); ?>" class="d-block px-3 py-2 text-decoration-none border-bottom text-dark">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="overflow-hidden">
-                            <div class="fw-semibold small text-truncate">{{ $contract->job?->title ?? 'N/A' }}</div>
-                            <div class="text-muted" style="font-size:.75rem">Client: {{ $contract->poster?->name ?? 'N/A' }}</div>
+                            <div class="fw-semibold small text-truncate"><?php echo e($contract->job?->title ?? 'N/A'); ?></div>
+                            <div class="text-muted" style="font-size:.75rem">Client: <?php echo e($contract->poster?->name ?? 'N/A'); ?></div>
                         </div>
                         <span class="badge bg-success-subtle text-success ms-2 flex-shrink-0">Active</span>
                     </div>
-                    @if($contract->milestones->count())
+                    <?php if($contract->milestones->count()): ?>
                     <div class="progress mt-1" style="height:4px">
-                        @php $done = $contract->milestones->where('status','approved')->count(); $total = $contract->milestones->count(); @endphp
-                        <div class="progress-bar" style="background:var(--druk-orange);width:{{ $total ? ($done/$total*100) : 0 }}%"></div>
+                        <?php $done = $contract->milestones->where('status','approved')->count(); $total = $contract->milestones->count(); ?>
+                        <div class="progress-bar" style="background:var(--druk-orange);width:<?php echo e($total ? ($done/$total*100) : 0); ?>%"></div>
                     </div>
-                    @endif
+                    <?php endif; ?>
                 </a>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="text-center py-4 text-muted">
                     <i class="fa fa-file-contract fa-2x mb-2 opacity-25"></i>
                     <div class="small">No active contracts</div>
                 </div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    {{-- Recent Jobs Feed --}}
+    
     <div class="col-lg-6">
         <div class="card h-100">
             <div class="card-header bg-white fw-bold d-flex align-items-center justify-content-between">
                 <span><i class="fa fa-briefcase me-2" style="color:#3b82f6"></i>New Job Listings</span>
-                <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-link p-0 text-decoration-none">Browse All</a>
+                <a href="<?php echo e(route('jobs.index')); ?>" class="btn btn-sm btn-link p-0 text-decoration-none">Browse All</a>
             </div>
             <div class="card-body p-0">
-                @forelse($recentJobs as $job)
-                <a href="{{ route('jobs.show', $job->slug) }}" class="d-block px-3 py-2 text-decoration-none border-bottom text-dark">
+                <?php $__empty_1 = true; $__currentLoopData = $recentJobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <a href="<?php echo e(route('jobs.show', $job->slug)); ?>" class="d-block px-3 py-2 text-decoration-none border-bottom text-dark">
                     <div class="d-flex align-items-start justify-content-between gap-2">
                         <div class="overflow-hidden">
-                            <div class="fw-semibold small text-truncate">{{ $job->title }}</div>
+                            <div class="fw-semibold small text-truncate"><?php echo e($job->title); ?></div>
                             <div class="text-muted" style="font-size:.75rem">
-                                {{ $job->category?->name }} &bull; {{ $job->created_at->diffForHumans() }}
+                                <?php echo e($job->category?->name); ?> &bull; <?php echo e($job->created_at->diffForHumans()); ?>
+
                             </div>
                         </div>
-                        <span class="text-nowrap small fw-semibold" style="color:var(--druk-orange)">Nu.{{ number_format($job->budget_min) }}+</span>
+                        <span class="text-nowrap small fw-semibold" style="color:var(--druk-orange)">Nu.<?php echo e(number_format($job->budget_min)); ?>+</span>
                     </div>
                 </a>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="text-center py-4 text-muted"><div class="small">No jobs available</div></div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-{{--  Recent Transactions  --}}
+
 <div class="card">
     <div class="card-header bg-white fw-bold d-flex align-items-center justify-content-between">
         <span><i class="fa fa-receipt me-2" style="color:#10b981"></i>Recent Transactions</span>
-        <a href="{{ route('wallet.index') }}" class="btn btn-sm btn-link p-0 text-decoration-none">View All</a>
+        <a href="<?php echo e(route('wallet.index')); ?>" class="btn btn-sm btn-link p-0 text-decoration-none">View All</a>
     </div>
-    @if($recentTransactions->isEmpty())
+    <?php if($recentTransactions->isEmpty()): ?>
     <div class="card-body text-center text-muted py-4">
         <i class="fa fa-receipt fa-2x mb-2 opacity-25"></i><div class="small">No transactions yet</div>
     </div>
-    @else
+    <?php else: ?>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 small">
             <thead class="table-light">
@@ -235,22 +236,25 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($recentTransactions as $tx)
+                <?php $__currentLoopData = $recentTransactions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tx): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <tr>
                     <td>
-                        @php $types = ['deposit'=>['bg-success','arrow-down'],'withdrawal'=>['bg-danger','arrow-up'],'escrow'=>['bg-warning text-dark','lock'],'release'=>['bg-primary','check']]; $t=$types[$tx->type]??['bg-secondary','circle']; @endphp
-                        <span class="badge {{ $t[0] }}"><i class="fa fa-{{ $t[1] }}"></i> {{ ucfirst($tx->type) }}</span>
+                        <?php $types = ['deposit'=>['bg-success','arrow-down'],'withdrawal'=>['bg-danger','arrow-up'],'escrow'=>['bg-warning text-dark','lock'],'release'=>['bg-primary','check']]; $t=$types[$tx->type]??['bg-secondary','circle']; ?>
+                        <span class="badge <?php echo e($t[0]); ?>"><i class="fa fa-<?php echo e($t[1]); ?>"></i> <?php echo e(ucfirst($tx->type)); ?></span>
                     </td>
-                    <td class="text-truncate" style="max-width:200px">{{ $tx->description ?? '' }}</td>
-                    <td class="text-end fw-semibold {{ $tx->type==='deposit'||$tx->type==='release' ? 'text-success' : 'text-danger' }}">
-                        {{ ($tx->type==='deposit'||$tx->type==='release') ? '+' : '-' }}Nu.{{ number_format($tx->amount) }}
+                    <td class="text-truncate" style="max-width:200px"><?php echo e($tx->description ?? ''); ?></td>
+                    <td class="text-end fw-semibold <?php echo e($tx->type==='deposit'||$tx->type==='release' ? 'text-success' : 'text-danger'); ?>">
+                        <?php echo e(($tx->type==='deposit'||$tx->type==='release') ? '+' : '-'); ?>Nu.<?php echo e(number_format($tx->amount)); ?>
+
                     </td>
-                    <td class="text-muted">{{ $tx->created_at->format('d M') }}</td>
+                    <td class="text-muted"><?php echo e($tx->created_at->format('d M')); ?></td>
                 </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
         </table>
     </div>
-    @endif
+    <?php endif; ?>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\tandi\OneDrive\Desktop\Druk-Freelancing-System\resources\views/dashboard/freelancer.blade.php ENDPATH**/ ?>

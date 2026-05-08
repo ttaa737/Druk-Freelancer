@@ -17,8 +17,11 @@
                     @endfor
                     <span class="text-muted small ms-1">{{ number_format($avgRating, 1) }} / 5.0</span>
                 </div>
+                @php
+                    $verificationLabel = ($user->verification_status === 'rejected') ? 'Unverified' : ucfirst($user->verification_status ?? 'Unverified');
+                @endphp
                 <span class="badge {{ $user->verification_status === 'verified' ? 'bg-success' : 'bg-secondary' }} mb-3">
-                    <i class="fa fa-{{ $user->verification_status === 'verified' ? 'check' : 'clock' }} me-1"></i>{{ ucfirst($user->verification_status) }}
+                    <i class="fa fa-{{ $user->verification_status === 'verified' ? 'check' : 'clock' }} me-1"></i>{{ $verificationLabel }}
                 </span>
                 @auth
                     @if(auth()->id() !== $user->id)

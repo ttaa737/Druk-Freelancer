@@ -16,7 +16,7 @@ class Job extends Model
     protected $fillable = [
         'poster_id', 'category_id', 'title', 'slug', 'description', 'requirements',
         'type', 'budget_min', 'budget_max', 'duration_days', 'experience_level',
-        'dzongkhag', 'remote_ok', 'status', 'is_featured', 'expires_at', 'deadline',
+        'dzongkhag', 'remote_ok', 'status', 'is_featured', 'expires_at', 'deadline', 'job_deadline',
     ];
 
     protected $casts = [
@@ -25,6 +25,7 @@ class Job extends Model
         'remote_ok'   => 'boolean',
         'is_featured' => 'boolean',
         'expires_at'  => 'datetime',
+        'job_deadline'=> 'datetime',
         'awarded_at'  => 'datetime',
     ];
 
@@ -92,14 +93,35 @@ class Job extends Model
         $this->attributes['expires_at'] = $value;
     }
 
+    public function setJobDeadlineAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['job_deadline'] = null;
+            return;
+        }
+
+        if ($value instanceof Carbon) {
+            $this->attributes['job_deadline'] = $value;
+            return;
+        }
+
+        if (is_string($value)) {
+            $parsed = Carbon::createFromFormat('d/m/Y', $value);
+            $this->attributes['job_deadline'] = $parsed->startOfDay();
+            return;
+        }
+
+        $this->attributes['job_deadline'] = $value;
+    }
+
     public function scopeOpen($query) { return $query->where('status', 'open'); }
     public function scopeFeatured($query) { return $query->where('is_featured', true); }
 
     /**
-     * Get the route key for the model.
+     * Use slug for implicit route model binding.
      */
-    public function getRouteKey()
+    public function getRouteKeyName(): string
     {
-        return $this->slug;
+        return 'slug';
     }
 }
