@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\AdminJobController;
 use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminVerificationController;
+use App\Http\Controllers\Admin\AdminCompletionController;
+use App\Http\Controllers\CompletionSubmissionController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DisputeController;
@@ -105,6 +107,15 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::post('/{contract}/fund-escrow', [ContractController::class, 'fundEscrow'])->name('fund');
         Route::post('/{contract}/sign', [ContractController::class, 'sign'])->name('sign');
         Route::post('/{contract}/cancel', [ContractController::class, 'cancel'])->name('cancel');
+    });
+
+    // ── Completion Submissions ───────────────────────────────────────────────
+    Route::prefix('completion')->name('completion.')->group(function () {
+        Route::get('/my-submissions', [CompletionSubmissionController::class, 'mySubmissions'])->name('my-submissions');
+        Route::get('/{contract}/submit', [CompletionSubmissionController::class, 'create'])->name('create');
+        Route::post('/{contract}/submit', [CompletionSubmissionController::class, 'store'])->name('store');
+        Route::get('/submissions/{submission}', [CompletionSubmissionController::class, 'show'])->name('show');
+        Route::get('/attachments/{attachment}/download', [CompletionSubmissionController::class, 'downloadAttachment'])->name('download-attachment');
     });
 
     // ── Milestones ───────────────────────────────────────────────────────────
@@ -221,6 +232,15 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
             Route::get('/{transaction}', [AdminTransactionController::class, 'show'])->name('show');
             Route::post('/{transaction}/approve', [AdminTransactionController::class, 'approveWithdrawal'])->name('approve');
             Route::post('/{transaction}/reject', [AdminTransactionController::class, 'rejectWithdrawal'])->name('reject');
+        });
+
+        // Completion Submissions
+        Route::prefix('completions')->name('completions.')->group(function () {
+            Route::get('/', [AdminCompletionController::class, 'index'])->name('index');
+            Route::get('/stats', [AdminCompletionController::class, 'stats'])->name('stats');
+            Route::get('/{submission}', [AdminCompletionController::class, 'show'])->name('show');
+            Route::post('/{submission}/verify', [AdminCompletionController::class, 'verify'])->name('verify');
+            Route::post('/{submission}/reject', [AdminCompletionController::class, 'reject'])->name('reject');
         });
     });
 });

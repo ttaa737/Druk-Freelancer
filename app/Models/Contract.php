@@ -16,8 +16,8 @@ class Contract extends Model
     protected $fillable = [
         'contract_number', 'job_id', 'proposal_id', 'poster_id', 'freelancer_id',
         'terms', 'total_amount', 'platform_fee', 'freelancer_amount',
-        'status', 'start_date', 'deadline', 'completed_at', 'cancelled_at',
-        'cancellation_reason', 'poster_signed', 'freelancer_signed',
+        'status', 'completion_status', 'start_date', 'deadline', 'completed_at', 'completion_submitted_at',
+        'cancelled_at', 'cancellation_reason', 'poster_signed', 'freelancer_signed',
     ];
 
     protected $casts = [
@@ -27,6 +27,7 @@ class Contract extends Model
         'start_date'       => 'datetime',
         'deadline'         => 'datetime',
         'completed_at'     => 'datetime',
+        'completion_submitted_at' => 'datetime',
         'cancelled_at'     => 'datetime',
         'poster_signed'    => 'boolean',
         'freelancer_signed' => 'boolean',
@@ -40,6 +41,7 @@ class Contract extends Model
     public function reviews(): HasMany { return $this->hasMany(Review::class); }
     public function dispute(): HasOne { return $this->hasOne(DisputeCase::class); }
     public function invoice(): HasOne { return $this->hasOne(Invoice::class); }
+    public function completionSubmission(): HasOne { return $this->hasOne(CompletionSubmission::class); }
 
     public function isActive(): bool { return $this->status === 'active'; }
     public function isCompleted(): bool { return $this->status === 'completed'; }
