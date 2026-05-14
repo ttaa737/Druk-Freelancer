@@ -205,11 +205,6 @@
                                     <span class="badge bg-{{ $msStatus['class'] }}">{{ $msStatus['label'] }}</span>
                                 </td>
                                 <td>
-                                    @if(auth()->user()->id === $contract->freelancer_id && $ms->status === 'pending')
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#submitMilestone{{ $ms->id }}">
-                                        <i class="fa fa-upload me-1"></i>Submit
-                                    </button>
-                                    @endif
                                     @if(auth()->user()->id === $contract->poster_id && $ms->status === 'submitted')
                                     <div class="btn-group btn-group-sm">
                                         <form method="POST" action="{{ route('milestones.approve', $ms) }}" class="d-inline">
@@ -244,6 +239,70 @@
                 </div>
             </div>
         </div>
+
+        {{-- Project Completion Section (for freelancer) --}}
+        @if($contract->status === 'active' && auth()->user()->id === $contract->freelancer_id)
+        <div class="card mb-3 shadow-sm border-success">
+            <div class="card-header bg-success-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-success"><i class="fa fa-tasks me-2"></i>Project Completion</h6>
+                    @php
+                        $completionSubmission = $contract->completionSubmission;
+                    @endphp
+                    @if($completionSubmission && $completionSubmission->isPending())
+                    <span class="badge bg-warning text-dark">⏳ Pending Review</span>
+                    @elseif($completionSubmission && $completionSubmission->isVerified())
+                    <span class="badge bg-info">✓ Verified</span>
+                    @elseif($completionSubmission && $completionSubmission->isPaymentProcessed())
+                    <span class="badge bg-success">✓ Paid</span>
+                    @elseif($completionSubmission && $completionSubmission->isRejected())
+                    <span class="badge bg-danger">⚠ Rejected</span>
+                    @else
+                    <span class="badge bg-secondary">Not Started</span>
+                    @endif
+                </div>
+            </div>
+            <div class="card-body">
+                @if(!$completionSubmission)
+                <p class="text-muted small mb-3">
+                    <i class="fa fa-info-circle me-1"></i>
+                    When all milestones are completed, submit your final work with evidence and documentation for admin verification and payment processing.
+                </p>
+                <a href="{{ route('completion.create', $contract) }}" class="btn btn-success btn-lg w-100">
+                    <i class="fa fa-arrow-up me-2"></i>Submit Project Completion & Evidence
+                </a>
+                @elseif($completionSubmission->isPending())
+                <div class="alert alert-info small mb-3">
+                    <i class="fa fa-clock me-1"></i>
+                    <strong>Under Review:</strong> Your submission is being verified. Check back soon!
+                </div>
+                <a href="{{ route('completion.show', $completionSubmission) }}" class="btn btn-outline-primary w-100 btn-sm">
+                    <i class="fa fa-eye me-1"></i>View Submission Details
+                </a>
+                @elseif($completionSubmission->isRejected())
+                <div class="alert alert-danger small mb-3">
+                    <strong>Feedback:</strong> {{ $completionSubmission->rejection_reason }}
+                </div>
+                <a href="{{ route('completion.create', $contract) }}" class="btn btn-warning w-100">
+                    <i class="fa fa-redo me-1"></i>Resubmit with Corrections
+                </a>
+                @elseif($completionSubmission->isVerified())
+                <div class="alert alert-info small mb-3">
+                    <i class="fa fa-spinner fa-spin me-1"></i>
+                    <strong>Processing:</strong> Your completion has been verified. Payment is being processed...
+                </div>
+                @elseif($completionSubmission->isPaymentProcessed())
+                <div class="alert alert-success small mb-3">
+                    <i class="fa fa-check-double me-1"></i>
+                    <strong>Payment Processed!</strong> Nu. {{ number_format($contract->freelancer_amount, 2) }} has been transferred to your wallet.
+                </div>
+                <a href="{{ route('wallet.index') }}" class="btn btn-outline-success w-100 btn-sm">
+                    <i class="fa fa-wallet me-1"></i>View Wallet
+                </a>
+                @endif
+            </div>
+        </div>
+        @endif
 
         {{-- Payment Terms --}}
         <div class="card mb-3 shadow-sm">
@@ -305,6 +364,8 @@
                     </button>
                 </form>
                 @endif
+
+
 
                 @if($contract->status === 'active')
                 <hr>

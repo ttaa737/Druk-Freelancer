@@ -184,7 +184,17 @@ class ProposalController extends Controller
             Proposal::where('job_id', $job->id)->where('id', '!=', $proposal->id)->update(['status' => 'rejected']);
             $job->update(['status' => 'in_progress', 'awarded_at' => now()]);
 
+            // Send notifications
+            NotificationService::proposalStatusChanged($proposal->freelancer, $proposal); // Acceptance email
             NotificationService::contractCreated($proposal->freelancer, $contract);
+            
+            // Notify other rejected freelancers
+            Proposal::where('job_id', $job->id)->where('id', '!=', $proposal->id)->get()->each(function ($rejectedProposal) {
+                if ($rejectedProposal->status === 'rejected') {
+                    NotificationService::proposalStatusChanged($rejectedProposal->freelancer, $rejectedProposal);
+                }
+            });
+
             AuditLogService::log('contract.awarded', $contract, notes: "Contract #{$contract->contract_number} created");
         });
 

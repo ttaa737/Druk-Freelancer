@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CompletionSubmission;
 use App\Models\Contract;
 use App\Services\PaymentProcessingService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -66,6 +67,9 @@ class AdminCompletionController extends Controller
                 $contract->completion_status = 'verified';
                 $contract->save();
 
+                // Send notification to freelancer
+                NotificationService::completionApproved($submission->freelancer, $submission);
+
                 // Log the action
                 Log::info('Completion verified and payment processed', [
                     'submission_id' => $submission->id,
@@ -113,6 +117,9 @@ class AdminCompletionController extends Controller
             $contract = $submission->contract;
             $contract->completion_status = 'rejected';
             $contract->save();
+
+            // Send notification to freelancer
+            NotificationService::completionRejected($submission->freelancer, $submission);
 
             Log::info('Completion rejected', [
                 'submission_id' => $submission->id,

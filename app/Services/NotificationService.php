@@ -4,8 +4,15 @@ namespace App\Services;
 
 use App\Models\Message;
 use App\Models\User;
+use App\Mail\ProposalAcceptedMail;
+use App\Mail\ProposalRejectedMail;
+use App\Mail\ProposalShortlistedMail;
+use App\Mail\NewProposalReceivedMail;
+use App\Mail\VerificationApprovedMail;
+use App\Mail\VerificationRejectedMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class NotificationService
 {
@@ -59,8 +66,15 @@ class NotificationService
         self::send($poster, 'new_proposal', 'New Proposal Received',
             "You have received a new proposal from {$proposal->freelancer->name} for your job: {$proposal->job->title}",
             ['proposal_id' => $proposal->id, 'job_id' => $proposal->job_id],
-            true
+            false // Will send custom email below
         );
+        
+        // Send beautiful custom email
+        try {
+            Mail::to($poster->email)->send(new NewProposalReceivedMail($proposal));
+        } catch (\Exception $e) {
+            Log::error("New proposal email failed for poster {$poster->id}: " . $e->getMessage());
+        }
     }
 
     /**
@@ -76,8 +90,22 @@ class NotificationService
         self::send($freelancer, 'proposal_status', 'Proposal Update',
             ($statusMessages[$proposal->status] ?? "Your proposal status changed to: {$proposal->status}") . " (Job: {$proposal->job->title})",
             ['proposal_id' => $proposal->id],
-            in_array($proposal->status, ['accepted', 'rejected'])
+            false // Will send custom email below
         );
+        
+        // Send beautiful custom email based on status
+        if (in_array($proposal->status, ['accepted', 'rejected', 'shortlisted'])) {
+            try {
+                $mail = match ($proposal->status) {
+                    'accepted' => new ProposalAcceptedMail($proposal),
+                    'rejected' => new ProposalRejectedMail($proposal),
+                    'shortlisted' => new ProposalShortlistedMail($proposal),
+                };
+                Mail::to($freelancer->email)->send($mail);
+            } catch (\Exception $e) {
+                Log::error("Proposal status email failed for freelancer {$freelancer->id}: " . $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -176,8 +204,15 @@ class NotificationService
         self::send($user, 'verification_approved', 'Document Verified! ✅',
             "Your {$docTypeLabel} has been verified successfully. Your account credibility has been enhanced.",
             ['document_type' => $documentType],
-            true
+            false // Will send custom email below
         );
+
+        // Send beautiful custom email
+        try {
+            Mail::to($user->email)->send(new VerificationApprovedMail($user, $documentType));
+        } catch (\Exception $e) {
+            Log::error("Verification approved email failed for user {$user->id}: " . $e->getMessage());
+        }
     }
 
     /**
@@ -197,8 +232,15 @@ class NotificationService
         self::send($user, 'verification_rejected', 'Document Rejected',
             "Your {$docTypeLabel} was rejected. Reason: {$reason}. Please upload a valid document.",
             ['document_type' => $documentType, 'reason' => $reason],
-            true
+            false // Will send custom email below
         );
+
+        // Send beautiful custom email
+        try {
+            Mail::to($user->email)->send(new VerificationRejectedMail($user, $documentType, $reason));
+        } catch (\Exception $e) {
+            Log::error("Verification rejected email failed for user {$user->id}: " . $e->getMessage());
+        }
     }
 
     /**
@@ -230,5 +272,59 @@ class NotificationService
             ['missing_documents' => $missingDocs],
             true
         );
+    }
+
+    /**
+     * Notify job poster when freelancer submits completion.
+     */
+    public static function completionSubmitted(User $poster, $submission): void
+    {
+        self::send($poster, 'completion_submitted', 'Work Submitted for Review',
+            "Your freelancer has submitted their completed work for contract #{$submission->contract->contract_number}. Please review at your convenience.",
+            ['submission_id' => $submission->id, 'contract_id' => $submission->contract_id],
+            false // Will send custom email below
+        );
+
+        try {
+            Mail::to($poster->email)->send(new \App\Mail\CompletionSubmittedMail($submission));
+        } catch (\Exception $e) {
+            Log::error("Completion submitted email failed for poster {$poster->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify freelancer when completion is verified/approved.
+     */
+    public static function completionApproved(User $freelancer, $submission): void
+    {
+        self::send($freelancer, 'completion_approved', 'Work Approved & Payment Processing',
+            "Your work submission has been approved! Payment of Nu. " . number_format($submission->contract->freelancer_amount, 2) . " is being processed to your wallet.",
+            ['submission_id' => $submission->id, 'contract_id' => $submission->contract_id],
+            false // Will send custom email below
+        );
+
+        try {
+            Mail::to($freelancer->email)->send(new \App\Mail\CompletionApprovedMail($submission));
+        } catch (\Exception $e) {
+            Log::error("Completion approved email failed for freelancer {$freelancer->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify freelancer when completion is rejected.
+     */
+    public static function completionRejected(User $freelancer, $submission): void
+    {
+        self::send($freelancer, 'completion_rejected', 'Resubmission Required',
+            "Your work submission requires revisions. Feedback: " . Str::limit($submission->rejection_reason ?? 'See your dashboard for details', 100),
+            ['submission_id' => $submission->id, 'contract_id' => $submission->contract_id],
+            false // Will send custom email below
+        );
+
+        try {
+            Mail::to($freelancer->email)->send(new \App\Mail\CompletionRejectedMail($submission));
+        } catch (\Exception $e) {
+            Log::error("Completion rejected email failed for freelancer {$freelancer->id}: " . $e->getMessage());
+        }
     }
 }

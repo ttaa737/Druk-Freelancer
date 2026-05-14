@@ -37,6 +37,7 @@ class ContractController extends Controller
         $contract->load([
             'job', 'poster.profile', 'freelancer.profile',
             'milestones.attachments', 'reviews', 'dispute', 'invoice',
+            'completionSubmission.attachments', 'completionSubmission.verifiedBy',
         ]);
 
         return view('contracts.show', compact('contract'));

@@ -75,6 +75,9 @@ class CompletionSubmissionController extends Controller
         $contract->completion_submitted_at = now();
         $contract->save();
 
+        // Send notification to job poster
+        NotificationService::completionSubmitted($contract->poster, $submission);
+
         return response()->json([
             'success' => true,
             'message' => 'Completion evidence submitted successfully. Admin will review and verify.',
