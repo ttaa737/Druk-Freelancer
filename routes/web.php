@@ -55,6 +55,8 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/update', [ProfileController::class, 'update'])->name('update');
         Route::post('/documents', [ProfileController::class, 'uploadDocument'])->name('documents');
+        Route::get('/documents/{document}/view', [ProfileController::class, 'viewDocument'])->name('documents.view');
+        Route::get('/documents/{document}/download', [ProfileController::class, 'downloadDocument'])->name('documents.download');
         Route::post('/phone-otp', [ProfileController::class, 'sendPhoneOTP'])->name('phone.otp');
         Route::post('/phone-verify', [ProfileController::class, 'verifyPhone'])->name('phone.verify');
     });
@@ -91,6 +93,8 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::post('/jobs/{job}', [ProposalController::class, 'store'])->name('store')->middleware('role:freelancer');
         Route::get('/my', [ProposalController::class, 'myProposals'])->name('my');
         Route::get('/{proposal}', [ProposalController::class, 'show'])->name('show');
+        Route::get('/{proposal}/cv/view', [ProposalController::class, 'viewCv'])->name('cv.view');
+        Route::get('/{proposal}/cv', [ProposalController::class, 'downloadCv'])->name('cv.download');
         Route::post('/{proposal}/shortlist', [ProposalController::class, 'shortlist'])->name('shortlist');
         Route::post('/{proposal}/award', [ProposalController::class, 'award'])->name('award');
         Route::post('/{proposal}/reject', [ProposalController::class, 'reject'])->name('reject');

@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@php($walletLayout = auth()->check() && auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.app')
+@extends($walletLayout)
 @section('title', 'My Wallet')
 @section('content')
 <h4 class="fw-bold mb-4">My Wallet</h4>
@@ -86,8 +87,8 @@
                 @forelse($transactions as $txn)
                 <div class="d-flex justify-content-between align-items-center border-bottom py-3">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle p-2 bg-{{ in_array($txn->type, ['deposit','escrow_release']) ? 'success' : 'danger' }} bg-opacity-10">
-                            <i class="fa fa-{{ in_array($txn->type, ['deposit','escrow_release']) ? 'arrow-down text-success' : 'arrow-up text-danger' }}"></i>
+                        <div class="rounded-circle p-2 bg-{{ $txn->net_amount >= 0 ? 'success' : 'danger' }} bg-opacity-10">
+                            <i class="fa fa-{{ $txn->net_amount >= 0 ? 'arrow-down text-success' : 'arrow-up text-danger' }}"></i>
                         </div>
                         <div>
                             <div class="fw-semibold small">{{ ucwords(str_replace('_', ' ', $txn->type)) }}</div>
@@ -99,8 +100,8 @@
                         </div>
                     </div>
                     <div class="text-end">
-                        <div class="fw-bold {{ in_array($txn->type, ['deposit','escrow_release']) ? 'text-success' : 'text-danger' }}">
-                            {{ in_array($txn->type, ['deposit','escrow_release']) ? '+' : '-' }}Nu. {{ number_format($txn->amount) }}
+                        <div class="fw-bold {{ $txn->net_amount >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ $txn->net_amount >= 0 ? '+' : '-' }}Nu. {{ number_format(abs($txn->net_amount)) }}
                         </div>
                         <span class="badge bg-{{ $txn->status === 'completed' ? 'success' : ($txn->status === 'pending' ? 'warning text-dark' : 'danger') }}">{{ ucfirst($txn->status) }}</span>
                     </div>

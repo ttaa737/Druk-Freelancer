@@ -1,205 +1,123 @@
 @extends('layouts.app')
-
-@section('title', 'Submission Details')
+@section('title', 'Completion Submission')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-4xl">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Submission Details</h1>
-            <p class="text-gray-600 mt-1">{{ $submission->contract->contract_number }}</p>
-        </div>
-        <a href="{{ route('completion.my-submissions') }}" class="text-blue-600 hover:text-blue-800">
-            ← Back to Submissions
-        </a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Completion Submission</h4>
+        <div class="text-muted small">{{ $submission->contract->contract_number }}</div>
     </div>
+    <a href="{{ route('contracts.show', $submission->contract) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa fa-arrow-left me-1"></i>Back to Contract
+    </a>
+</div>
 
-    <div class="grid grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="col-span-2 space-y-6">
-            <!-- Status Card -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold text-gray-900">Status Overview</h2>
-                    <span class="inline-block px-4 py-2 rounded-full text-sm font-bold
-                        @if($submission->isPending()) bg-yellow-100 text-yellow-800
-                        @elseif($submission->isVerified()) bg-blue-100 text-blue-800
-                        @elseif($submission->isRejected()) bg-red-100 text-red-800
-                        @elseif($submission->isPaymentProcessed()) bg-green-100 text-green-800
-                        @endif
-                    ">
-                        @if($submission->isPending())
-                            ⏳ Awaiting Review
-                        @elseif($submission->isVerified())
-                            ✓ Verified
-                        @elseif($submission->isRejected())
-                            ✗ Rejected
-                        @elseif($submission->isPaymentProcessed())
-                            ✓ Payment Processed
-                        @endif
-                    </span>
-                </div>
-
-                <!-- Timeline -->
-                <div class="space-y-4">
-                    <div class="flex gap-4">
-                        <div class="flex flex-col items-center">
-                            <div class="w-4 h-4 bg-green-500 rounded-full"></div>
-                            <div class="w-0.5 h-12 bg-gray-300"></div>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-900">Submitted</p>
-                            <p class="text-sm text-gray-600">{{ $submission->submitted_at->format('M d, Y at H:i') }}</p>
-                        </div>
-                    </div>
-
-                    @if($submission->verified_at)
-                    <div class="flex gap-4">
-                        <div class="flex flex-col items-center">
-                            <div class="w-4 h-4 bg-green-500 rounded-full"></div>
-                            <div class="w-0.5 h-12 bg-gray-300"></div>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-900">Verified by Admin</p>
-                            <p class="text-sm text-gray-600">{{ $submission->verified_at->format('M d, Y at H:i') }}</p>
-                            <p class="text-sm text-blue-600 mt-1">By: {{ $submission->verifiedBy->name }}</p>
-                        </div>
-                    </div>
-                    @endif
-
-                    @if($submission->rejected_at)
-                    <div class="flex gap-4">
-                        <div class="flex flex-col items-center">
-                            <div class="w-4 h-4 bg-red-500 rounded-full"></div>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-900">Rejected by Admin</p>
-                            <p class="text-sm text-gray-600">{{ $submission->rejected_at->format('M d, Y at H:i') }}</p>
-                            <p class="text-sm text-red-600 mt-1">By: {{ $submission->verifiedBy->name }}</p>
-                        </div>
-                    </div>
-                    @elseif($submission->payment_processed_at)
-                    <div class="flex gap-4">
-                        <div class="flex flex-col items-center">
-                            <div class="w-4 h-4 bg-green-500 rounded-full"></div>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-900">Payment Processed</p>
-                            <p class="text-sm text-gray-600">{{ $submission->payment_processed_at->format('M d, Y at H:i') }}</p>
-                            <p class="text-sm text-green-600 mt-1">✓ Funds transferred to your wallet</p>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Completion Notes -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Your Submission Notes</h2>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p class="text-gray-700 whitespace-pre-wrap">{{ $submission->submission_notes }}</p>
-                </div>
-            </div>
-
-            <!-- Attached Evidence -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Submitted Evidence</h2>
-
-                @if($submission->attachments->count() > 0)
-                    <div class="space-y-3">
-                        @foreach($submission->attachments as $attachment)
-                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M8 16.5a1 1 0 11-2 0 1 1 0 012 0zM15 16.5a1 1 0 11-2 0 1 1 0 012 0z"/><path d="M3 4a2 2 0 00-2 2v4a2 2 0 002 2h9.586l-1.293-1.293a1 1 0 111.414-1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414L12.586 7H3a1 1 0 01-.82-.384l-.84 1.566A1 1 0 001 8v4a1 1 0 11-2 0V8a3 3 0 013-3h9.586L9.293 2.293a1 1 0 011.414-1.414l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L12.586 4H3z"/>
-                                        </svg>
-                                        <div>
-                                            <p class="font-medium text-gray-900">{{ $attachment->file_name }}</p>
-                                            <p class="text-sm text-gray-600">
-                                                {{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB
-                                            </p>
-                                        </div>
-                                    </div>
-                                    @if($attachment->description)
-                                    <p class="text-sm text-gray-600 ml-8">{{ $attachment->description }}</p>
-                                    @endif
-                                </div>
-                                <a href="{{ route('completion.download-attachment', $attachment) }}" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium">
-                                    Download
-                                </a>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Status</h6>
+                @if($submission->isPending())
+                    <span class="badge bg-warning text-dark">Awaiting Admin Review</span>
+                @elseif($submission->isVerified())
+                    <span class="badge bg-info">Verified</span>
+                @elseif($submission->isPaymentProcessed())
+                    <span class="badge bg-success">Payment Processed</span>
                 @else
-                    <p class="text-gray-600">No attachments in this submission</p>
+                    <span class="badge bg-danger">Rejected</span>
                 @endif
             </div>
-
-            <!-- Rejection Feedback (if rejected) -->
-            @if($submission->isRejected())
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <h2 class="text-lg font-bold text-red-900 mb-3">Feedback from Admin</h2>
-                <p class="text-red-800 mb-4">{{ $submission->rejection_reason }}</p>
-                <p class="text-sm text-red-700 mb-4">
-                    <strong>What to do:</strong> Please address the feedback above and resubmit your completion with the necessary improvements.
-                </p>
-                <a href="{{ route('completion.create', $submission->contract) }}" class="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                    Resubmit Completion
-                </a>
+            <div class="card-body">
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2"><i class="fa fa-upload text-muted me-2"></i>Submitted: {{ $submission->submitted_at?->format('d M Y, h:i A') }}</li>
+                    @if($submission->verified_at)
+                    <li class="mb-2"><i class="fa fa-check-circle text-info me-2"></i>Verified: {{ $submission->verified_at->format('d M Y, h:i A') }}</li>
+                    @endif
+                    @if($submission->payment_processed_at)
+                    <li class="mb-2"><i class="fa fa-wallet text-success me-2"></i>Payment processed: {{ $submission->payment_processed_at->format('d M Y, h:i A') }}</li>
+                    @endif
+                    @if($submission->rejected_at)
+                    <li><i class="fa fa-times-circle text-danger me-2"></i>Rejected: {{ $submission->rejected_at->format('d M Y, h:i A') }}</li>
+                    @endif
+                </ul>
             </div>
-            @endif
         </div>
 
-        <!-- Sidebar: Contract Info -->
-        <div class="col-span-1">
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-4">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Contract Information</h3>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Submission Notes</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-muted" style="white-space: pre-wrap;">{{ $submission->submission_notes }}</p>
+            </div>
+        </div>
 
-                <div class="space-y-4 text-sm">
-                    <div>
-                        <p class="text-gray-600">Job Title</p>
-                        <p class="font-semibold text-gray-900">{{ $submission->contract->job->title }}</p>
-                    </div>
-
-                    <div>
-                        <p class="text-gray-600">Contract Number</p>
-                        <p class="font-semibold font-mono text-gray-900">{{ $submission->contract->contract_number }}</p>
-                    </div>
-
-                    <div>
-                        <p class="text-gray-600">Status</p>
-                        <p class="font-semibold text-gray-900">
-                            <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                                {{ ucfirst($submission->contract->status) }}
-                            </span>
-                        </p>
-                    </div>
-
-                    <div class="border-t border-gray-200 pt-4">
-                        <p class="text-gray-600">Start Date</p>
-                        <p class="font-semibold text-gray-900">{{ $submission->contract->start_date->format('M d, Y') }}</p>
-                    </div>
-
-                    <div>
-                        <p class="text-gray-600">Deadline</p>
-                        <p class="font-semibold text-gray-900">{{ $submission->contract->deadline->format('M d, Y') }}</p>
-                    </div>
-
-                    <div class="bg-blue-50 p-3 rounded border border-blue-200">
-                        <p class="text-gray-600 text-xs mb-1">Payment Amount</p>
-                        <p class="font-bold text-lg text-blue-600">{{ config('platform.currency') }} {{ number_format($submission->contract->freelancer_amount, 2) }}</p>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Evidence Files</h6>
+                <span class="badge bg-light text-dark border">{{ $submission->attachments->count() }} files</span>
+            </div>
+            <div class="card-body">
+                @forelse($submission->attachments as $attachment)
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div>
+                            <div class="fw-semibold">{{ $attachment->file_name }}</div>
+                            <div class="text-muted small">{{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB</div>
+                            @if($attachment->description)
+                            <div class="text-muted small mt-1">{{ $attachment->description }}</div>
+                            @endif
+                        </div>
+                        <a href="{{ route('completion.download-attachment', $attachment) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fa fa-download me-1"></i>Download
+                        </a>
                     </div>
                 </div>
+                @empty
+                <div class="text-muted">No files uploaded.</div>
+                @endforelse
+            </div>
+        </div>
 
-                <div class="border-t border-gray-200 mt-4 pt-4">
-                    <a href="{{ route('contracts.show', $submission->contract) }}" class="inline-block text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        View Full Contract →
-                    </a>
+        @if($submission->isRejected())
+        <div class="alert alert-danger">
+            <div class="fw-semibold mb-1">Admin Feedback</div>
+            <div>{{ $submission->rejection_reason }}</div>
+            @if(auth()->id() === $submission->freelancer_id)
+            <a href="{{ route('completion.create', $submission->contract) }}" class="btn btn-sm btn-danger mt-3">
+                <i class="fa fa-redo me-1"></i>Resubmit Completion
+            </a>
+            @endif
+        </div>
+        @endif
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Contract Info</h6>
+            </div>
+            <div class="card-body small">
+                <div class="mb-2">
+                    <div class="text-muted">Job</div>
+                    <div class="fw-semibold">{{ $submission->contract->job->title }}</div>
                 </div>
+                <div class="mb-2">
+                    <div class="text-muted">Freelancer Amount</div>
+                    <div class="fw-semibold text-success">{{ config('platform.currency') }} {{ number_format($submission->contract->freelancer_amount, 2) }}</div>
+                </div>
+                <div class="mb-2">
+                    <div class="text-muted">Platform Fee</div>
+                    <div class="fw-semibold">{{ config('platform.currency') }} {{ number_format($submission->contract->platform_fee, 2) }}</div>
+                </div>
+                <div>
+                    <div class="text-muted">Deadline</div>
+                    <div class="fw-semibold">{{ $submission->contract->deadline?->format('d M Y') ?? 'N/A' }}</div>
+                </div>
+                <hr>
+                <a href="{{ route('contracts.show', $submission->contract) }}" class="btn btn-sm btn-outline-primary w-100">
+                    <i class="fa fa-file-contract me-1"></i>Open Contract
+                </a>
             </div>
         </div>
     </div>

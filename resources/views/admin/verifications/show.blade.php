@@ -1,10 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Verification Review - ' . $user->name)
 
-@php
-use Illuminate\Support\Facades\Storage;
-@endphp
-
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h4 class="fw-bold mb-0">Verification Review</h4>
@@ -92,7 +88,7 @@ use Illuminate\Support\Facades\Storage;
                 <div style="height:200px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
                     @if($document->file_path)
                         @if(in_array($ext, $imageExts))
-                        <img src="{{ asset('storage/' . $document->file_path) }}" 
+                        <img src="{{ route('profile.documents.view', $document) }}" 
                              class="img-fluid" 
                              style="max-height:100%; max-width:100%; object-fit:contain;"
                              alt="Document preview">
@@ -133,10 +129,13 @@ use Illuminate\Support\Facades\Storage;
                 @if($document->status === 'pending')
                 <div class="card-footer bg-light border-top p-2">
                     <div class="d-flex gap-2">
-                        <a href="{{ asset('storage/' . $document->file_path) }}" 
+                        <a href="{{ route('profile.documents.view', $document) }}" 
                            class="btn btn-sm btn-outline-secondary flex-grow-1" 
                            target="_blank">
                             <i class="fa fa-external-link-alt me-1"></i>Open
+                        </a>
+                        <a href="{{ route('profile.documents.download', $document) }}" class="btn btn-sm btn-outline-primary flex-grow-1">
+                            <i class="fa fa-download me-1"></i>Download
                         </a>
                         <form method="POST" action="{{ route('admin.verifications.approve', $document) }}" class="flex-grow-1">
                             @csrf

@@ -18,105 +18,126 @@ class PaymentProcessingService
      */
     public function processCompletionPayment(CompletionSubmission $submission): bool
     {
-        return DB::transaction(function () use ($submission) {
-            try {
+        try {
+            return DB::transaction(function () use ($submission) {
                 $contract = $submission->contract;
                 $freelancer = $submission->freelancer;
                 $poster = $contract->poster;
                 $adminUser = $this->getAdminUser();
 
-                // Get or create wallets
-                $freelancerWallet = Wallet::firstOrCreate(
-                    ['user_id' => $freelancer->id],
-                    ['available_balance' => 0, 'escrow_balance' => 0]
-                );
-                $adminWallet = Wallet::firstOrCreate(
-                    ['user_id' => $adminUser->id],
-                    ['available_balance' => 0, 'escrow_balance' => 0]
-                );
+                if (!$adminUser) {
+                    throw new \RuntimeException('No admin user found to receive platform fee.');
+                }
 
-                $freelancerAmount = $contract->freelancer_amount;
-                $platformFee = $contract->platform_fee;
+                Wallet::firstOrCreate(['user_id' => $poster->id], ['available_balance' => 0, 'escrow_balance' => 0]);
+                Wallet::firstOrCreate(['user_id' => $freelancer->id], ['available_balance' => 0, 'escrow_balance' => 0]);
+                Wallet::firstOrCreate(['user_id' => $adminUser->id], ['available_balance' => 0, 'escrow_balance' => 0]);
 
-                // Transaction 1: Transfer to Freelancer
-                $this->createTransaction(
-                    user: $freelancer,
-                    contract: $contract,
-                    type: 'completion_payment',
-                    amount: $freelancerAmount,
-                    fee: 0,
-                    netAmount: $freelancerAmount,
-                    notes: "Completion payment for {$contract->contract_number}"
-                );
+                $posterWallet = Wallet::where('user_id', $poster->id)->lockForUpdate()->firstOrFail();
+                $freelancerWallet = Wallet::where('user_id', $freelancer->id)->lockForUpdate()->firstOrFail();
+                $adminWallet = Wallet::where('user_id', $adminUser->id)->lockForUpdate()->firstOrFail();
 
-                // Update freelancer wallet
-                $freelancerWallet->available_balance += $freelancerAmount;
-                $freelancerWallet->total_earned += $freelancerAmount;
-                $freelancerWallet->save();
+                $totalAmount = (float) $contract->total_amount;
+                $freelancerAmount = (float) $contract->freelancer_amount;
+                $platformFee = (float) $contract->platform_fee;
 
-                // Transaction 2: Transfer admin fee
-                $this->createTransaction(
-                    user: $adminUser,
-                    contract: $contract,
-                    type: 'platform_fee_earned',
-                    amount: $platformFee,
-                    fee: 0,
-                    netAmount: $platformFee,
-                    notes: "Platform fee for {$contract->contract_number}"
-                );
+                $source = 'escrow';
+                $posterBalanceBefore = (float) $posterWallet->escrow_balance;
 
-                // Update admin wallet
-                $adminWallet->available_balance += $platformFee;
-                $adminWallet->total_earned += $platformFee;
-                $adminWallet->save();
+                if ($posterWallet->escrow_balance >= $totalAmount) {
+                    $posterWallet->decrement('escrow_balance', $totalAmount);
+                    $posterBalanceAfter = (float) $posterWallet->fresh()->escrow_balance;
+                } elseif ($posterWallet->available_balance >= $totalAmount) {
+                    // Legacy fallback if old contracts were not escrow funded.
+                    $source = 'available_balance';
+                    $posterBalanceBefore = (float) $posterWallet->available_balance;
+                    $posterWallet->decrement('available_balance', $totalAmount);
+                    $posterWallet->increment('total_spent', $totalAmount);
+                    $posterBalanceAfter = (float) $posterWallet->fresh()->available_balance;
+                } else {
+                    throw new \RuntimeException('Insufficient poster funds to process completion payment.');
+                }
 
-                // Transaction 3: Deduction from Poster
-                $posterWallet = Wallet::firstOrCreate(
-                    ['user_id' => $poster->id],
-                    ['available_balance' => 0, 'escrow_balance' => 0]
-                );
+                $freelancerBalanceBefore = (float) $freelancerWallet->available_balance;
+                $freelancerWallet->increment('available_balance', $freelancerAmount);
+                $freelancerWallet->increment('total_earned', $freelancerAmount);
+                $freelancerBalanceAfter = (float) $freelancerWallet->fresh()->available_balance;
 
-                $this->createTransaction(
-                    user: $poster,
-                    contract: $contract,
-                    type: 'job_payment',
-                    amount: $contract->total_amount,
-                    fee: 0,
-                    netAmount: -$contract->total_amount,
-                    notes: "Payment for job {$contract->contract_number}"
-                );
+                $adminBalanceBefore = (float) $adminWallet->available_balance;
+                $adminWallet->increment('available_balance', $platformFee);
+                $adminWallet->increment('total_earned', $platformFee);
+                $adminBalanceAfter = (float) $adminWallet->fresh()->available_balance;
 
-                // Update poster wallet
-                $posterWallet->available_balance -= $contract->total_amount;
-                $posterWallet->total_spent += $contract->total_amount;
-                $posterWallet->save();
+                Transaction::create([
+                    'user_id' => $poster->id,
+                    'contract_id' => $contract->id,
+                    'type' => 'completion_settlement',
+                    'amount' => $totalAmount,
+                    'fee' => 0,
+                    'net_amount' => -$totalAmount,
+                    'status' => 'completed',
+                    'notes' => "Completion settlement for {$contract->contract_number} (source: {$source})",
+                    'balance_before' => $posterBalanceBefore,
+                    'balance_after' => $posterBalanceAfter,
+                    'ip_address' => request()->ip(),
+                ]);
 
-                // Update completion submission status
+                Transaction::create([
+                    'user_id' => $freelancer->id,
+                    'contract_id' => $contract->id,
+                    'type' => 'completion_payment',
+                    'amount' => $freelancerAmount,
+                    'fee' => 0,
+                    'net_amount' => $freelancerAmount,
+                    'status' => 'completed',
+                    'notes' => "Completion payment for {$contract->contract_number}",
+                    'balance_before' => $freelancerBalanceBefore,
+                    'balance_after' => $freelancerBalanceAfter,
+                    'ip_address' => request()->ip(),
+                ]);
+
+                Transaction::create([
+                    'user_id' => $adminUser->id,
+                    'contract_id' => $contract->id,
+                    'type' => 'platform_fee_earned',
+                    'amount' => $platformFee,
+                    'fee' => 0,
+                    'net_amount' => $platformFee,
+                    'status' => 'completed',
+                    'notes' => "Platform fee for {$contract->contract_number}",
+                    'balance_before' => $adminBalanceBefore,
+                    'balance_after' => $adminBalanceAfter,
+                    'ip_address' => request()->ip(),
+                ]);
+
                 $submission->status = CompletionSubmission::STATUS_PAYMENT_PROCESSED;
                 $submission->payment_processed_at = now();
                 $submission->save();
 
-                // Update contract status
                 $contract->completion_status = 'paid';
+                $contract->status = 'completed';
+                $contract->completed_at = now();
                 $contract->save();
 
                 Log::info("Payment processed successfully for completion submission #{$submission->id}", [
                     'contract_id' => $contract->id,
                     'freelancer_id' => $freelancer->id,
+                    'poster_id' => $poster->id,
+                    'source' => $source,
                     'freelancer_amount' => $freelancerAmount,
                     'platform_fee' => $platformFee,
                 ]);
 
                 return true;
-            } catch (\Exception $e) {
-                Log::error("Payment processing failed for completion submission #{$submission->id}", [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
+            });
+        } catch (\Exception $e) {
+            Log::error("Payment processing failed for completion submission #{$submission->id}", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-                return false;
-            }
-        });
+            return false;
+        }
     }
 
     /**
@@ -157,13 +178,14 @@ class PaymentProcessingService
     /**
      * Get admin user (typically first super admin)
      */
-    private function getAdminUser(): User
+    private function getAdminUser(): ?User
     {
-        return User::where('is_admin', true)
+        return User::query()
+            ->where('role', 'admin')
             ->orWhereHas('roles', function ($query) {
                 $query->where('name', 'admin');
             })
-            ->first() ?? User::where('is_super_admin', true)->first();
+            ->first();
     }
 
     /**

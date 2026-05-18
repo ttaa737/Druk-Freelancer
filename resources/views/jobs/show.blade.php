@@ -188,16 +188,30 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('proposals.store', $job) }}">
+                    @php
+                        $proposalMinBid = $job->budget_min !== null ? (float) $job->budget_min : null;
+                        $proposalMaxBid = $job->budget_max !== null ? (float) $job->budget_max : null;
+                    @endphp
+                    <form method="POST" action="{{ route('proposals.store', $job) }}" enctype="multipart/form-data">
                         @csrf
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold small text-uppercase text-muted">Bid Amount (Nu.) <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-lg">
                                     <span class="input-group-text bg-light border-end-0">Nu.</span>
-                                    <input type="number" name="bid_amount" class="form-control border-start-0" required min="300" max="500000" placeholder="15,000" value="{{ old('bid_amount') }}" style="font-size:16px;">
+                                    <input type="number" name="bid_amount" class="form-control border-start-0" required @if($proposalMinBid !== null) min="{{ $proposalMinBid }}" @endif @if($proposalMaxBid !== null) max="{{ $proposalMaxBid }}" @endif placeholder="15,000" value="{{ old('bid_amount') }}" style="font-size:16px;">
                                 </div>
-                                <small class="text-muted d-block mt-2">Cannot be less than Nu. 300 or exceed Nu. 500,000</small>
+                                <small class="text-muted d-block mt-2">
+                                    @if($proposalMinBid !== null && $proposalMaxBid !== null)
+                                        Project budget: Nu. {{ number_format($proposalMinBid) }} - Nu. {{ number_format($proposalMaxBid) }}
+                                    @elseif($proposalMinBid !== null)
+                                        Minimum project budget: Nu. {{ number_format($proposalMinBid) }}
+                                    @elseif($proposalMaxBid !== null)
+                                        Maximum project budget: Nu. {{ number_format($proposalMaxBid) }}
+                                    @else
+                                        Budget negotiable
+                                    @endif
+                                </small>
                                 @error('bid_amount') <small class="text-danger d-block mt-1"><i class="fa fa-exclamation-circle me-1"></i>{{ $message }}</small> @enderror
                             </div>
                             <div class="col-md-6">
@@ -214,6 +228,12 @@
                             <textarea name="cover_letter" class="form-control" rows="7" required style="font-size:15px; resize:vertical;"
                                       placeholder="Tell the client about your experience, approach, and why you're the best fit for this project...">{{ old('cover_letter') }}</textarea>
                             @error('cover_letter') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">Upload CV / Resume <span class="text-danger">*</span></label>
+                            <input type="file" name="cv_file" class="form-control" accept=".pdf,.doc,.docx" required>
+                            <small class="text-muted d-block mt-2">Accepted formats: PDF, DOC, DOCX. Max size: 10 MB.</small>
+                            @error('cv_file') <small class="text-danger d-block mt-1">{{ $message }}</small> @enderror
                         </div>
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                             <button type="submit" class="btn btn-primary btn-lg">
@@ -251,7 +271,7 @@
     <div class="col-lg-4">
 
         {{-- Budget Card --}}
-        <div class="card border-0 shadow-sm mb-3 sticky-top" style="top: 20px;">
+        <div class="card border-0 shadow-sm mb-3">
             <div class="card-body">
                 <div class="text-muted small fw-semibold text-uppercase mb-2">Project Budget</div>
                 <div style="font-size: 32px; font-weight: 800; color: #0d6efd; margin-bottom: 1rem;">{{ $job->budgetRange }}</div>
@@ -269,85 +289,6 @@
                     </div>
                 </div>
 
-                @if($job->deadline || $job->job_deadline || $job->duration_days)
-                @php
-                    $proposalDeadlinePast = $job->deadline ? ($job->deadline->isToday() || $job->deadline->isPast()) : false;
-                    $completionDeadline = $job->job_deadline ?: (($job->deadline && $job->duration_days) ? $job->deadline->copy()->addDays((int) $job->duration_days) : null);
-                @endphp
-                <div class="alert {{ $proposalDeadlinePast ? 'alert-danger' : 'alert-warning' }} py-3 px-3 d-flex align-items-center gap-3 mb-3">
-                    <i class="fa fa-calendar-alt fs-5"></i>
-                    <div style="font-size: 14px;">
-                        @if($job->deadline)
-                        <div class="fw-semibold mb-1">Proposal Deadline</div>
-                        <div class="fs-6 fw-bold text-danger">{{ $job->deadline->format('d/m/Y') }}</div>
-                        @if($proposalDeadlinePast)
-                        <small class="text-danger fw-semibold d-block">This deadline has passed</small>
-                        @endif
-                        @endif
-                        @if($completionDeadline)
-                        <small class="text-muted d-block mt-1">
-                            <span class="fw-semibold text-body">Job Deadline:</span>
-                            {{ $completionDeadline->format('d/m/Y') }}
-                        </small>
-                        @elseif($job->duration_days)
-                        <small class="text-muted d-block mt-1">
-                            <span class="fw-semibold text-body">Job Deadline:</span>
-                            within {{ (int) $job->duration_days }} days
-                        </small>
-                        @endif
-                    </div>
-                </div>
-                @endif
-
-                <hr>
-
-                @auth
-                    @if(auth()->user()->hasRole('freelancer') && $job->status === 'open' && $job->poster_id !== auth()->id())
-                        @if(!$alreadyApplied)
-                            @if(auth()->user()->verification_status === 'verified')
-                            <a href="#proposal-form" class="btn btn-primary w-100 btn-lg">
-                                <i class="fa fa-paper-plane me-2"></i>Submit Proposal
-                            </a>
-                            @else
-                            <button type="button" class="btn btn-outline-secondary w-100 btn-lg" disabled>
-                                <i class="fa fa-paper-plane me-2"></i>Submit Proposal
-                            </button>
-                            <div class="border border-info rounded-2 bg-info bg-opacity-10 p-3 mt-3 small">
-                                <div class="d-flex align-items-start gap-2">
-                                    <i class="fa fa-lock text-info mt-1" style="font-size: 16px;"></i>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-2">Verify Your Account</div>
-                                        <div class="text-muted mb-2" style="font-size: 13px;">Complete verification to submit proposals and build your profile.</div>
-                                        <a href="{{ route('profile.edit') }}#tab-docs" class="btn btn-info btn-sm text-white">
-                                            <i class="fa fa-arrow-right me-1"></i>Get Verified
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                        @else
-                        <div class="alert alert-success py-3 px-3 d-flex align-items-center gap-2 mb-0">
-                            <i class="fa fa-check-circle fs-5"></i>
-                            <div>
-                                <div class="fw-semibold small">Already Applied</div>
-                                <small class="text-muted">You've already submitted a proposal for this job.</small>
-                            </div>
-                        </div>
-                        @endif
-                    @elseif(auth()->user()->id === $job->poster_id)
-                    <a href="{{ route('jobs.edit', $job) }}" class="btn btn-outline-secondary w-100 btn-lg">
-                        <i class="fa fa-edit me-2"></i>Edit Job
-                    </a>
-                    @else
-                    <a href="{{ route('login', ['intended' => route('jobs.show', $job)]) }}" class="btn btn-primary w-100 btn-lg">
-                        <i class="fa fa-sign-in-alt me-2"></i>Login to Apply
-                    </a>
-                    @endif
-                @else
-                <a href="{{ route('login', ['intended' => route('jobs.show', $job)]) }}" class="btn btn-primary w-100 btn-lg">
-                    <i class="fa fa-sign-in-alt me-2"></i>Login to Apply
-                </a>
-                @endauth
             </div>
         </div>
 

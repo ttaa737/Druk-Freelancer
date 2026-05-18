@@ -3,27 +3,65 @@
 @section('content')
 <h4 class="fw-bold mb-4">Jobs</h4>
 
-<div class="card mb-4">
-    <div class="card-body p-3">
-        <form method="GET" class="row g-2">
-            <div class="col-sm-4"><input type="text" name="search" class="form-control form-control-sm" placeholder="Search jobs..." value="{{ request('search') }}"></div>
-            <div class="col-sm-3">
-                <select name="status" class="form-select form-select-sm">
+@php
+    $activeFilters = array_filter([
+        'search' => request('search'),
+        'status' => request('status') ? ucfirst(str_replace('_', ' ', request('status'))) : null,
+    ]);
+@endphp
+
+<div class="card mb-4 border-0 shadow-sm overflow-hidden">
+    <div class="card-header border-0 bg-primary bg-gradient text-white py-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <h6 class="fw-bold mb-1"><i class="fa fa-filter me-2"></i>Filter Jobs</h6>
+                <div class="small opacity-75">Search by title and narrow results by job status.</div>
+            </div>
+            <div class="small opacity-75">{{ $jobs->total() }} total records</div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-lg-7">
+                <label class="form-label small fw-semibold text-muted text-uppercase">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Search jobs by title, poster, or keyword..." value="{{ request('search') }}">
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label small fw-semibold text-muted text-uppercase">Status</label>
+                <select name="status" class="form-select">
                     <option value="">All Status</option>
                     @foreach(['open','in_progress','completed','cancelled','moderated'] as $s)
                     <option value="{{ $s }}" @selected(request('status')===$s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-auto">
-                <button class="btn btn-sm btn-primary">Filter</button>
-                <a href="{{ route('admin.jobs.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            <div class="col-lg-2 col-md-6 d-grid">
+                <button class="btn btn-primary">
+                    <i class="fa fa-sliders-h me-1"></i>Apply
+                </button>
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2 align-items-center justify-content-between pt-1">
+                <div class="d-flex flex-wrap gap-2">
+                    @forelse($activeFilters as $label => $value)
+                        <span class="badge bg-light text-dark border px-3 py-2">
+                            <span class="text-muted text-uppercase small me-1">{{ $label }}:</span> {{ $value }}
+                        </span>
+                    @empty
+                        <span class="text-muted small">No active filters</span>
+                    @endforelse
+                </div>
+                <a href="{{ route('admin.jobs.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fa fa-undo me-1"></i>Clear Filters
+                </a>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card">
+<div class="card table-card">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="table-light"><tr>
@@ -60,7 +98,16 @@
             </tbody>
         </table>
     </div>
-    <div class="card-body pt-0">{{ $jobs->withQueryString()->links() }}</div>
+    <div class="card-body pt-0 pb-3">
+        <div class="d-flex align-items-center">
+            <div class="text-muted small">
+                Showing {{ $jobs->firstItem() ?? 0 }} to {{ $jobs->lastItem() ?? 0 }} of {{ $jobs->total() }} results
+            </div>
+            <div class="ms-auto pagination-wrapper">
+                {{ $jobs->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Moderation Modal -->

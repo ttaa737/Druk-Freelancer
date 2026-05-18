@@ -64,12 +64,18 @@
         <a href="{{ route('admin.transactions.index') }}" class="nav-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
             <i class="fa fa-money-bill-wave"></i> Transactions
         </a>
+        <a href="{{ route('wallet.index') }}" class="nav-link {{ request()->routeIs('wallet.*') ? 'active' : '' }}">
+            <i class="fa fa-wallet"></i> Wallet
+        </a>
         <div class="section-label">Support</div>
         <a href="{{ route('admin.disputes.index') }}" class="nav-link {{ request()->routeIs('admin.disputes.*') ? 'active' : '' }}">
             <i class="fa fa-gavel"></i> Disputes
         </a>
         <a href="{{ route('admin.verifications.index') }}" class="nav-link {{ request()->routeIs('admin.verifications.*') ? 'active' : '' }}">
             <i class="fa fa-id-card"></i> Verifications
+        </a>
+        <a href="{{ route('admin.completions.index') }}" class="nav-link {{ request()->routeIs('admin.completions.*') ? 'active' : '' }}">
+            <i class="fa fa-clipboard-check"></i> Work Completions
         </a>
         <div class="section-label">Account</div>
         <form method="POST" action="{{ route('logout') }}">

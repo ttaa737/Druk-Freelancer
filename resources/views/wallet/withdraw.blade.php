@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@php($walletLayout = auth()->check() && auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.app')
+@extends($walletLayout)
 @section('title', 'Withdraw Funds')
 @section('content')
 <div class="row justify-content-center">

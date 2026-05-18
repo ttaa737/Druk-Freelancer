@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\CompletionSubmission;
 use App\Models\CompletionSubmissionAttachment;
 use App\Models\Contract;
+use App\Services\NotificationService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Gate;
 
 class CompletionSubmissionController extends Controller
 {
@@ -63,11 +64,27 @@ class CompletionSubmissionController extends Controller
                 'rejection_reason' => null,
                 'rejected_at' => null,
             ]);
+
+            // Replace previous files so admin/poster always review the latest evidence set.
+            foreach ($submission->attachments as $existingAttachment) {
+                Storage::disk('local')->delete($existingAttachment->file_path);
+            }
+            $submission->attachments()->delete();
         }
 
         // Process attachments
-        foreach ($request->file('attachments') as $attachment) {
-            $this->storeAttachment($submission, $attachment, $request);
+        foreach ($validated['attachments'] as $index => $attachmentMeta) {
+            $file = $request->file("attachments.{$index}.file");
+            if (!$file) {
+                continue;
+            }
+
+            $this->storeAttachment(
+                $submission,
+                $file,
+                $attachmentMeta['document_type'],
+                $attachmentMeta['description'] ?? null
+            );
         }
 
         // Update contract status
@@ -75,23 +92,29 @@ class CompletionSubmissionController extends Controller
         $contract->completion_submitted_at = now();
         $contract->save();
 
-        // Send notification to job poster
+        // Notify poster and admins that review is required.
         NotificationService::completionSubmitted($contract->poster, $submission);
+        NotificationService::completionSubmittedToAdmins($submission);
 
         return response()->json([
             'success' => true,
-            'message' => 'Completion evidence submitted successfully. Admin will review and verify.',
+            'message' => 'Completion evidence submitted successfully. Job poster and admin have been notified for review.',
             'submission_id' => $submission->id,
-            'redirect' => route('contract.show', $contract),
+            'redirect' => route('contracts.show', $contract),
         ]);
     }
 
     /**
      * Store individual attachment
      */
-    private function storeAttachment(CompletionSubmission $submission, $file, Request $request)
+    private function storeAttachment(
+        CompletionSubmission $submission,
+        UploadedFile $file,
+        string $documentType,
+        ?string $description
+    ): void
     {
-        $disk = Storage::disk('private');
+        $disk = Storage::disk('local');
         $path = "completions/{$submission->contract_id}/";
 
         // Generate unique filename
@@ -104,8 +127,8 @@ class CompletionSubmissionController extends Controller
             'file_path' => $filePath,
             'file_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),
-            'description' => $request->input('attachments')[array_search($file, $request->file('attachments'))]['description'] ?? null,
-            'document_type' => $request->input('attachments')[array_search($file, $request->file('attachments'))]['document_type'],
+            'description' => $description,
+            'document_type' => $documentType,
         ]);
     }
 
@@ -126,7 +149,7 @@ class CompletionSubmissionController extends Controller
     {
         $this->authorize('download', $attachment);
 
-        $disk = Storage::disk('private');
+        $disk = Storage::disk('local');
 
         if (!$disk->exists($attachment->file_path)) {
             abort(404, 'File not found');

@@ -1,302 +1,196 @@
 @extends('layouts.admin')
-
-@section('title', 'Verify Completion - ' . $submission->contract->contract_number)
+@section('title', 'Verify Completion')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Review Completion Submission</h1>
-                <p class="text-gray-600 mt-1">Contract: <strong>{{ $submission->contract->contract_number }}</strong></p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Completion Review</h4>
+        <div class="text-muted small">Contract {{ $submission->contract->contract_number }}</div>
+    </div>
+    <a href="{{ route('admin.completions.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fa fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Submission Details</h6>
             </div>
-            <a href="{{ route('admin.completions.index') }}" class="text-blue-600 hover:text-blue-800">
-                ← Back to Submissions
-            </a>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Status</div>
+                        <div class="mt-1">
+                            @if($submission->isPending())
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            @elseif($submission->isVerified())
+                                <span class="badge bg-info">Verified</span>
+                            @elseif($submission->isPaymentProcessed())
+                                <span class="badge bg-success">Payment Processed</span>
+                            @else
+                                <span class="badge bg-danger">Rejected</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Submitted At</div>
+                        <div class="fw-semibold mt-1">{{ $submission->submitted_at?->format('d M Y, h:i A') }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Freelancer</div>
+                        <a href="{{ route('admin.users.show', $submission->freelancer) }}" class="fw-semibold text-decoration-none mt-1 d-inline-block">
+                            {{ $submission->freelancer->name }}
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Job Poster</div>
+                        <a href="{{ route('admin.users.show', $submission->contract->poster) }}" class="fw-semibold text-decoration-none mt-1 d-inline-block">
+                            {{ $submission->contract->poster->name }}
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Freelancer Notes</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0 text-muted" style="white-space: pre-wrap;">{{ $submission->submission_notes }}</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Evidence Files</h6>
+                <span class="badge bg-light text-dark border">{{ $submission->attachments->count() }} files</span>
+            </div>
+            <div class="card-body">
+                @forelse($submission->attachments as $attachment)
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex flex-wrap justify-content-between gap-2 align-items-center">
+                        <div>
+                            <div class="fw-semibold">{{ $attachment->file_name }}</div>
+                            <div class="text-muted small">
+                                {{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB
+                            </div>
+                            @if($attachment->description)
+                            <div class="text-muted small mt-1">{{ $attachment->description }}</div>
+                            @endif
+                        </div>
+                        <a href="{{ route('completion.download-attachment', $attachment) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fa fa-download me-1"></i>Download
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="text-muted">No evidence files uploaded.</div>
+                @endforelse
+            </div>
+        </div>
+
+        @if($submission->isRejected())
+        <div class="alert alert-danger">
+            <div class="fw-semibold mb-1">Rejection Reason</div>
+            <div>{{ $submission->rejection_reason }}</div>
+            <div class="small mt-2">Rejected at {{ $submission->rejected_at?->format('d M Y, h:i A') }}</div>
+        </div>
+        @endif
+
+        @if($submission->isPaymentProcessed())
+        <div class="alert alert-success">
+            <div class="fw-semibold mb-1">Payment Processed</div>
+            <div class="small">Verified at {{ $submission->verified_at?->format('d M Y, h:i A') }}</div>
+            <div class="small">Processed at {{ $submission->payment_processed_at?->format('d M Y, h:i A') }}</div>
+        </div>
+        @endif
     </div>
 
-    <div class="grid grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="col-span-2 space-y-6">
-            <!-- Submission Status -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Submission Details</h2>
-
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <p class="text-sm text-gray-600">Status</p>
-                        <p class="font-semibold">
-                            <span class="inline-block px-3 py-1 rounded-full text-sm font-medium
-                                @if($submission->isPending()) bg-yellow-100 text-yellow-800
-                                @elseif($submission->isVerified()) bg-green-100 text-green-800
-                                @elseif($submission->isRejected()) bg-red-100 text-red-800
-                                @elseif($submission->isPaymentProcessed()) bg-blue-100 text-blue-800
-                                @endif
-                            ">
-                                {{ ucfirst($submission->status) }}
-                            </span>
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Submitted At</p>
-                        <p class="font-semibold">{{ $submission->submitted_at->format('M d, Y H:i') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Freelancer</p>
-                        <p class="font-semibold">
-                            <a href="{{ route('admin.users.show', $submission->freelancer) }}" class="text-blue-600 hover:text-blue-800">
-                                {{ $submission->freelancer->name }}
-                            </a>
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Job Poster</p>
-                        <p class="font-semibold">
-                            <a href="{{ route('admin.users.show', $submission->contract->poster) }}" class="text-blue-600 hover:text-blue-800">
-                                {{ $submission->contract->poster->name }}
-                            </a>
-                        </p>
-                    </div>
+    <div class="col-xl-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Payment Summary</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Contract Total</span>
+                    <strong>{{ config('platform.currency') }} {{ number_format($submission->contract->total_amount, 2) }}</strong>
                 </div>
-            </div>
-
-            <!-- Submission Notes -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Freelancer's Notes</h2>
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <p class="text-gray-700 whitespace-pre-wrap">{{ $submission->submission_notes }}</p>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Freelancer Receives</span>
+                    <strong class="text-success">{{ config('platform.currency') }} {{ number_format($submission->contract->freelancer_amount, 2) }}</strong>
                 </div>
-            </div>
-
-            <!-- Attached Evidence -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Submitted Evidence ({{ $submission->attachments->count() }} files)</h2>
-
-                @if($submission->attachments->count() > 0)
-                    <div class="space-y-3">
-                        @foreach($submission->attachments as $attachment)
-                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M8 16.5a1 1 0 11-2 0 1 1 0 012 0zM15 16.5a1 1 0 11-2 0 1 1 0 012 0z"/><path d="M3 4a2 2 0 00-2 2v4a2 2 0 002 2h9.586l-1.293-1.293a1 1 0 111.414-1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 00-1.414 1.414L12.586 7H3a1 1 0 01-.82-.384l-.84 1.566A1 1 0 001 8v4a1 1 0 11-2 0V8a3 3 0 013-3h9.586L9.293 2.293a1 1 0 011.414-1.414l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L12.586 4H3z"/>
-                                        </svg>
-                                        <div>
-                                            <p class="font-medium text-gray-900">{{ $attachment->file_name }}</p>
-                                            <p class="text-sm text-gray-600">
-                                                {{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB
-                                            </p>
-                                        </div>
-                                    </div>
-                                    @if($attachment->description)
-                                    <p class="text-sm text-gray-600 ml-8">{{ $attachment->description }}</p>
-                                    @endif
-                                </div>
-                                <a href="{{ route('completion.download-attachment', $attachment) }}" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium">
-                                    Download
-                                </a>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-gray-600">No attachments submitted</p>
-                @endif
-            </div>
-
-            @if($submission->isRejected())
-            <!-- Rejection Reason -->
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <h2 class="text-lg font-bold text-red-900 mb-3">Rejection Reason</h2>
-                <p class="text-red-800">{{ $submission->rejection_reason }}</p>
-                <p class="text-sm text-red-700 mt-3">Rejected at: {{ $submission->rejected_at->format('M d, Y H:i') }}</p>
-            </div>
-            @elseif($submission->isPaymentProcessed())
-            <!-- Payment Processed -->
-            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-                <h2 class="text-lg font-bold text-green-900 mb-3">✓ Payment Processed</h2>
-                <div class="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                        <p class="text-green-700">Verified By</p>
-                        <p class="font-semibold text-gray-900">{{ $submission->verifiedBy->name }}</p>
-                    </div>
-                    <div>
-                        <p class="text-green-700">Verified At</p>
-                        <p class="font-semibold text-gray-900">{{ $submission->verified_at->format('M d, Y H:i') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-green-700">Payment Processed</p>
-                        <p class="font-semibold text-gray-900">{{ $submission->payment_processed_at->format('M d, Y H:i') }}</p>
-                    </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Platform Fee</span>
+                    <strong class="text-primary">{{ config('platform.currency') }} {{ number_format($submission->contract->platform_fee, 2) }}</strong>
                 </div>
+                <hr>
+                <small class="text-muted">On approval, settlement is processed and all involved parties are notified.</small>
             </div>
-            @endif
         </div>
 
-        <!-- Sidebar: Contract & Payment Info -->
-        <div class="col-span-1">
-            <!-- Contract Info -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">Contract Information</h3>
-
-                <div class="space-y-3 text-sm">
-                    <div>
-                        <p class="text-gray-600">Job Title</p>
-                        <p class="font-semibold">{{ $submission->contract->job->title }}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-600">Contract Number</p>
-                        <p class="font-semibold">{{ $submission->contract->contract_number }}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-600">Start Date</p>
-                        <p class="font-semibold">{{ $submission->contract->start_date->format('M d, Y') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-600">Deadline</p>
-                        <p class="font-semibold">{{ $submission->contract->deadline->format('M d, Y') }}</p>
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-200 mt-4 pt-4">
-                    <a href="{{ route('contracts.show', $submission->contract) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        View Full Contract →
-                    </a>
-                </div>
+        @if($submission->isPending())
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Verification Actions</h6>
             </div>
-
-            <!-- Payment Summary -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-bold text-blue-900 mb-4">Payment Summary</h3>
-
-                <div class="space-y-3 text-sm bg-white rounded p-3 mb-4">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Total Contract:</span>
-                        <span class="font-semibold">{{ config('platform.currency') }} {{ number_format($submission->contract->total_amount, 2) }}</span>
-                    </div>
-                    <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                        <span class="text-gray-600">Platform Fee ({{ config('platform.service_fee_percent') }}%):</span>
-                        <span class="font-semibold text-amber-600">{{ config('platform.currency') }} {{ number_format($submission->contract->platform_fee, 2) }}</span>
-                    </div>
-                    <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
-                        <span class="font-semibold text-gray-900">Freelancer Receives:</span>
-                        <span class="font-bold text-green-600 text-lg">{{ config('platform.currency') }} {{ number_format($submission->contract->freelancer_amount, 2) }}</span>
-                    </div>
-                </div>
-
-                <div class="bg-gray-100 p-3 rounded text-xs text-gray-700">
-                    <p><strong>When approved:</strong> Payment will be deducted from poster's account, distributed to freelancer, and platform fee added to admin account.</p>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            @if($submission->isPending())
-            <div class="space-y-3">
-                <!-- Approve Button -->
-                <button
-                    onclick="showApproveModal()"
-                    class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                    ✓ Verify & Process Payment
+            <div class="card-body d-grid gap-2">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveModal">
+                    <i class="fa fa-check me-1"></i>Verify & Process Payment
                 </button>
-
-                <!-- Reject Button -->
-                <button
-                    onclick="showRejectModal()"
-                    class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                >
-                    ✗ Reject Submission
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                    <i class="fa fa-ban me-1"></i>Reject Submission
                 </button>
             </div>
-            @endif
         </div>
+        @endif
     </div>
 </div>
 
-<!-- Approve Modal -->
-<div id="approveModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-lg max-w-md w-full">
-        <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Verify Completion & Process Payment</h2>
-
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p class="text-sm text-green-800">
-                    This action will:
-                </p>
-                <ul class="text-sm text-green-800 mt-2 ml-4 list-disc space-y-1">
-                    <li>Mark completion as verified</li>
-                    <li>Deduct {{ config('platform.currency') }} {{ number_format($submission->contract->total_amount, 2) }} from poster's account</li>
-                    <li>Transfer {{ config('platform.currency') }} {{ number_format($submission->contract->freelancer_amount, 2) }} to freelancer</li>
-                    <li>Add {{ config('platform.currency') }} {{ number_format($submission->contract->platform_fee, 2) }} to admin account</li>
-                </ul>
+<div class="modal fade" id="approveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Verify Completion & Process Settlement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-            <form id="approveForm" class="space-y-4">
+            <form id="approveForm">
                 @csrf
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Verification Notes (Optional)
-                    </label>
-                    <textarea
-                        name="verification_notes"
-                        rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                        placeholder="Notes about the verification..."
-                    ></textarea>
+                <div class="modal-body">
+                    <div class="alert alert-success small">
+                        This will verify completion, release payment to freelancer, and post platform fee transaction.
+                    </div>
+                    <label class="form-label">Verification Notes (optional)</label>
+                    <textarea name="verification_notes" rows="4" class="form-control" placeholder="Internal verification notes..."></textarea>
                 </div>
-
-                <div class="flex gap-3">
-                    <button type="button" onclick="hideApproveModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                        Cancel
-                    </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                        Confirm Verification
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Verification</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-lg max-w-md w-full">
-        <div class="p-6">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Reject Submission</h2>
-
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p class="text-sm text-red-800">
-                    The freelancer will be notified to resubmit with corrected work.
-                </p>
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Completion Submission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-            <form id="rejectForm" class="space-y-4">
+            <form id="rejectForm">
                 @csrf
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Rejection Reason <span class="text-red-500">*</span>
-                    </label>
-                    <textarea
-                        name="rejection_reason"
-                        rows="4"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
-                        placeholder="Explain why the submission is being rejected..."
-                        required
-                        minlength="20"
-                    ></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Be specific about what needs to be corrected</p>
+                <div class="modal-body">
+                    <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
+                    <textarea name="rejection_reason" rows="4" class="form-control" required minlength="20" placeholder="Explain what needs correction..."></textarea>
                 </div>
-
-                <div class="flex gap-3">
-                    <button type="button" onclick="hideRejectModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                        Cancel
-                    </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                        Confirm Rejection
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Rejection</button>
                 </div>
             </form>
         </div>
@@ -305,78 +199,41 @@
 
 @push('scripts')
 <script>
-function showApproveModal() {
-    document.getElementById('approveModal').classList.remove('hidden');
-}
-
-function hideApproveModal() {
-    document.getElementById('approveModal').classList.add('hidden');
-}
-
-function showRejectModal() {
-    document.getElementById('rejectModal').classList.remove('hidden');
-}
-
-function hideRejectModal() {
-    document.getElementById('rejectModal').classList.add('hidden');
-}
-
-document.getElementById('approveForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await submitAction('{{ route("admin.completions.verify", $submission) }}', new FormData(e.target));
-});
-
-document.getElementById('rejectForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await submitAction('{{ route("admin.completions.reject", $submission) }}', new FormData(e.target));
-});
-
 async function submitAction(url, formData) {
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            }
-        });
+    const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    });
 
-        const data = await response.json();
-
-        if (data.success) {
-            showAlert('success', data.message);
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-        } else {
-            showAlert('error', data.message);
-        }
-    } catch (error) {
-        showAlert('error', 'An error occurred');
-        console.error(error);
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Request failed');
     }
+
+    alert(data.message);
+    window.location.reload();
 }
 
-function showAlert(type, message) {
-    const alertHtml = `
-        <div class="fixed top-4 right-4 p-4 rounded-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} shadow-lg max-w-md z-50">
-            ${message}
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', alertHtml);
-    setTimeout(() => {
-        document.querySelector('.fixed').remove();
-    }, 5000);
-}
-
-// Close modals on background click
-document.getElementById('approveModal').addEventListener('click', (e) => {
-    if (e.target.id === 'approveModal') hideApproveModal();
+document.getElementById('approveForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    try {
+        await submitAction('{{ route("admin.completions.verify", $submission) }}', new FormData(this));
+    } catch (error) {
+        alert(error.message);
+    }
 });
 
-document.getElementById('rejectModal').addEventListener('click', (e) => {
-    if (e.target.id === 'rejectModal') hideRejectModal();
+document.getElementById('rejectForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    try {
+        await submitAction('{{ route("admin.completions.reject", $submission) }}', new FormData(this));
+    } catch (error) {
+        alert(error.message);
+    }
 });
 </script>
 @endpush

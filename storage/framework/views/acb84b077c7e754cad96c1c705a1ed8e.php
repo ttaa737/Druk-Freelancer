@@ -43,6 +43,7 @@
                     <div class="card-body p-4">
                         <form method="POST" action="<?php echo e(route('profile.update')); ?>" enctype="multipart/form-data">
                             <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
+                            <input type="hidden" name="section" value="profile">
 
                             
                             <div class="d-flex align-items-start gap-4 mb-4">
@@ -305,6 +306,7 @@ unset($__errorArgs, $__bag); ?>
                     <div class="card-body p-4">
                         <form method="POST" action="<?php echo e(route('profile.update')); ?>">
                             <?php echo csrf_field(); ?> <?php echo method_field('PUT'); ?>
+                            <input type="hidden" name="section" value="skills">
                             <p class="text-muted small mb-4">Select the skills that best describe your expertise. Your skills appear on your public profile and help clients find you.</p>
                             <?php if($categories->isEmpty()): ?>
                             <div class="text-center text-muted py-4"><i class="fa fa-info-circle me-1"></i>No skills available yet.</div>
@@ -465,6 +467,17 @@ unset($__errorArgs, $__bag); ?>
                                             <strong><i class="fa fa-exclamation-triangle me-1"></i> Rejection Reason:</strong><br>
                                             <?php echo e($doc->rejection_reason); ?>
 
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if($doc): ?>
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            <a href="<?php echo e(route('profile.documents.view', $doc)); ?>" class="btn btn-outline-secondary btn-sm" target="_blank">
+                                                <i class="fa fa-eye me-1"></i>View File
+                                            </a>
+                                            <a href="<?php echo e(route('profile.documents.download', $doc)); ?>" class="btn btn-outline-primary btn-sm">
+                                                <i class="fa fa-download me-1"></i>Download File
+                                            </a>
                                         </div>
                                     <?php endif; ?>
 

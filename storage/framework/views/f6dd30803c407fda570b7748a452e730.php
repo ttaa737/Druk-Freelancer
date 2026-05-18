@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root { --druk-orange:#FF6B35; --druk-blue:#1A3A5C; --druk-gold:#F4A823; --sidebar-w:230px; }
-        body { background:#f1f3f6; font-family:'Segoe UI',sans-serif; }
+        body { background:#f1f3f6; font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column; min-height:100vh; }
         /*  Topbar  */
         .topbar { background:var(--druk-blue); height:54px; position:sticky; top:0; z-index:200; box-shadow:0 2px 8px rgba(0,0,0,.1); }
         .topbar .navbar-brand span { color:var(--druk-orange); }
@@ -24,7 +24,7 @@
         .app-sidebar .nav-link.active i { color:var(--druk-orange); }
         /*  Content  */
         .app-content { flex:1; min-width:0; padding:1.5rem; }
-        .app-wrapper { display:flex; }
+        .app-wrapper { display:flex; flex:1 1 auto; }
         /*  Cards  */
         .card { border:none; box-shadow:0 1px 4px rgba(0,0,0,.07); border-radius:.75rem; transition:box-shadow 0.3s ease; }
         .card:hover { box-shadow:0 4px 12px rgba(0,0,0,.12); }
@@ -249,6 +249,9 @@
             
             <?php if(auth()->user()->isAdmin()): ?>
             <div class="sidebar-section">Admin</div>
+            <a href="<?php echo e(route('wallet.index')); ?>" class="nav-link <?php echo e(request()->routeIs('wallet.*') ? 'active' : ''); ?>">
+                <i class="fa fa-wallet"></i> Wallet
+            </a>
             <a href="<?php echo e(route('admin.dashboard')); ?>" class="nav-link">
                 <i class="fa fa-shield-alt"></i> Admin Panel
             </a>

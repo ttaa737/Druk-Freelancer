@@ -74,41 +74,28 @@ class AdminVerificationController extends Controller
         $user = $document->user;
         $user->update(['last_verification_attempt' => now()]);
 
-        // Require CID plus role-specific secondary document for full verification
+        // Require CID plus at least one secondary document for full verification
+        // Trust the admin's judgment when approving documents
         $cidApproved = $user->verificationDocuments()
             ->where('document_type', 'cid')
             ->where('status', 'approved')
             ->exists();
 
-        $meetsVerification = false;
+        // Count all approved documents (excluding CID)
+        $otherApprovedDocs = $user->verificationDocuments()
+            ->where('document_type', '!=', 'cid')
+            ->where('status', 'approved')
+            ->count();
+
+        $meetsVerification = $cidApproved && $otherApprovedDocs > 0;
         $missingDocs = [];
 
-        if ($user->role === 'job_poster') {
-            // Job posters require: CID + BRN (Business Registration Number)
-            $brnApproved = $user->verificationDocuments()
-                ->where('document_type', 'brn')
-                ->where('status', 'approved')
-                ->exists();
-            
-            if (!$cidApproved) $missingDocs[] = 'Citizenship ID (CID)';
-            if (!$brnApproved) $missingDocs[] = 'Business Registration Number (BRN)';
-            
-            $meetsVerification = $cidApproved && $brnApproved;
-        } elseif ($user->role === 'freelancer') {
-            // Freelancers require: CID + Professional License
-            $licenseApproved = $user->verificationDocuments()
-                ->where('document_type', 'license')
-                ->where('status', 'approved')
-                ->exists();
-            
-            if (!$cidApproved) $missingDocs[] = 'Citizenship ID (CID)';
-            if (!$licenseApproved) $missingDocs[] = 'Professional License';
-            
-            $meetsVerification = $cidApproved && $licenseApproved;
-        } else {
-            // Fallback: require CID only
-            if (!$cidApproved) $missingDocs[] = 'Citizenship ID (CID)';
-            $meetsVerification = $cidApproved;
+        if (!$cidApproved) {
+            $missingDocs[] = 'Citizenship ID (CID)';
+        }
+
+        if ($otherApprovedDocs === 0) {
+            $missingDocs[] = 'At least one supporting document (BRN, Professional License, etc.)';
         }
 
         if ($meetsVerification && $user->verification_status !== 'verified') {

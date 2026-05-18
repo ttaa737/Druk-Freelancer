@@ -15,6 +15,7 @@ class Proposal extends Model
     protected $fillable = [
         'job_id', 'freelancer_id', 'cover_letter', 'bid_amount',
         'delivery_days', 'status', 'rejection_reason', 'is_shortlisted',
+        'cv_file_path', 'cv_file_name',
     ];
 
     protected $casts = [

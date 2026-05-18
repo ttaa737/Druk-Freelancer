@@ -240,15 +240,16 @@
             </div>
         </div>
 
+        @php
+            $completionSubmission = $contract->completionSubmission;
+        @endphp
+
         {{-- Project Completion Section (for freelancer) --}}
         @if($contract->status === 'active' && auth()->user()->id === $contract->freelancer_id)
         <div class="card mb-3 shadow-sm border-success">
             <div class="card-header bg-success-subtle">
                 <div class="d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold text-success"><i class="fa fa-tasks me-2"></i>Project Completion</h6>
-                    @php
-                        $completionSubmission = $contract->completionSubmission;
-                    @endphp
                     @if($completionSubmission && $completionSubmission->isPending())
                     <span class="badge bg-warning text-dark">⏳ Pending Review</span>
                     @elseif($completionSubmission && $completionSubmission->isVerified())
@@ -298,6 +299,57 @@
                 </div>
                 <a href="{{ route('wallet.index') }}" class="btn btn-outline-success w-100 btn-sm">
                     <i class="fa fa-wallet me-1"></i>View Wallet
+                </a>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- Completion Review (for job poster) --}}
+        @if($contract->status === 'active' && auth()->user()->id === $contract->poster_id)
+        <div class="card mb-3 shadow-sm border-primary">
+            <div class="card-header bg-primary bg-opacity-10">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-primary"><i class="fa fa-clipboard-check me-2"></i>Work Completion Review</h6>
+                    @if($completionSubmission && $completionSubmission->isPending())
+                    <span class="badge bg-warning text-dark">Awaiting Admin Verification</span>
+                    @elseif($completionSubmission && $completionSubmission->isPaymentProcessed())
+                    <span class="badge bg-success">Paid</span>
+                    @elseif($completionSubmission && $completionSubmission->isRejected())
+                    <span class="badge bg-danger">Rework Requested</span>
+                    @else
+                    <span class="badge bg-secondary">Waiting for Submission</span>
+                    @endif
+                </div>
+            </div>
+            <div class="card-body">
+                @if(!$completionSubmission)
+                <div class="alert alert-light border mb-0 small">
+                    <i class="fa fa-info-circle me-1 text-primary"></i>
+                    Freelancer has not submitted final completion evidence yet.
+                </div>
+                @elseif($completionSubmission->isPending())
+                <div class="alert alert-info small mb-3">
+                    <i class="fa fa-clock me-1"></i>
+                    Freelancer submitted evidence. Admin will verify before settlement.
+                </div>
+                <a href="{{ route('completion.show', $completionSubmission) }}" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fa fa-eye me-1"></i>View Submitted Evidence
+                </a>
+                @elseif($completionSubmission->isRejected())
+                <div class="alert alert-danger small mb-3">
+                    <strong>Admin Feedback:</strong> {{ $completionSubmission->rejection_reason }}
+                </div>
+                <a href="{{ route('completion.show', $completionSubmission) }}" class="btn btn-outline-danger btn-sm w-100">
+                    <i class="fa fa-eye me-1"></i>View Rejected Submission
+                </a>
+                @elseif($completionSubmission->isPaymentProcessed())
+                <div class="alert alert-success small mb-3">
+                    <i class="fa fa-check-double me-1"></i>
+                    Completion verified and payment settled to freelancer wallet.
+                </div>
+                <a href="{{ route('completion.show', $completionSubmission) }}" class="btn btn-outline-success btn-sm w-100">
+                    <i class="fa fa-receipt me-1"></i>View Settlement Details
                 </a>
                 @endif
             </div>

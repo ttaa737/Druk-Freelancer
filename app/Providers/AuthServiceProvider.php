@@ -3,8 +3,12 @@
 namespace App\Providers;
 
 use App\Models\Contract;
+use App\Models\CompletionSubmission;
+use App\Models\CompletionSubmissionAttachment;
 use App\Models\Job;
 use App\Models\Proposal;
+use App\Policies\CompletionSubmissionAttachmentPolicy;
+use App\Policies\CompletionSubmissionPolicy;
 use App\Policies\ContractPolicy;
 use App\Policies\JobPolicy;
 use App\Policies\ProposalPolicy;
@@ -17,6 +21,8 @@ class AuthServiceProvider extends ServiceProvider
         Job::class      => JobPolicy::class,
         Contract::class => ContractPolicy::class,
         Proposal::class => ProposalPolicy::class,
+        CompletionSubmission::class => CompletionSubmissionPolicy::class,
+        CompletionSubmissionAttachment::class => CompletionSubmissionAttachmentPolicy::class,
     ];
 
     public function boot(): void

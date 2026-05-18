@@ -17,7 +17,7 @@ class AdminCompletionController extends Controller
     public function __construct(PaymentProcessingService $paymentService)
     {
         $this->paymentService = $paymentService;
-        $this->middleware('admin');
+        $this->middleware('role:admin');
     }
 
     /**
@@ -48,7 +48,7 @@ class AdminCompletionController extends Controller
     public function verify(Request $request, CompletionSubmission $submission)
     {
         $validated = $request->validate([
-            'verification_notes' => 'required|string|min:10|max:1000',
+            'verification_notes' => 'nullable|string|min:10|max:1000',
         ]);
 
         try {
@@ -69,6 +69,7 @@ class AdminCompletionController extends Controller
 
                 // Send notification to freelancer
                 NotificationService::completionApproved($submission->freelancer, $submission);
+                NotificationService::completionApprovedPoster($submission->contract->poster, $submission);
 
                 // Log the action
                 Log::info('Completion verified and payment processed', [
@@ -120,6 +121,7 @@ class AdminCompletionController extends Controller
 
             // Send notification to freelancer
             NotificationService::completionRejected($submission->freelancer, $submission);
+            NotificationService::completionRejectedPoster($submission->contract->poster, $submission);
 
             Log::info('Completion rejected', [
                 'submission_id' => $submission->id,

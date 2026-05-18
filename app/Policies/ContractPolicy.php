@@ -33,4 +33,20 @@ class ContractPolicy
             || (($contract->poster_id === $user->id || $contract->freelancer_id === $user->id)
                 && in_array($contract->status, ['pending', 'active']));
     }
+
+    /**
+     * Freelancer can submit completion evidence for active contracts.
+     */
+    public function submitCompletion(User $user, Contract $contract): bool
+    {
+        if ($user->id !== $contract->freelancer_id) {
+            return false;
+        }
+
+        if ($contract->status !== 'active') {
+            return false;
+        }
+
+        return $contract->completion_status !== 'paid';
+    }
 }

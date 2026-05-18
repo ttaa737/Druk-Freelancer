@@ -1,185 +1,82 @@
 @extends('layouts.app')
-
 @section('title', 'Submit Completion - ' . $contract->contract_number)
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-4xl">
-    <!-- Header -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-4">
-            <h1 class="text-3xl font-bold text-gray-900">Submit Project Completion</h1>
-            <a href="{{ route('contracts.show', $contract) }}" class="text-blue-600 hover:text-blue-800">
-                ← Back to Contract
-            </a>
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Submit Project Completion</h4>
+            <div class="text-muted small">Contract {{ $contract->contract_number }} • {{ $contract->job->title }}</div>
         </div>
-        <p class="text-gray-600">Contract: <strong>{{ $contract->contract_number }}</strong></p>
-        <p class="text-gray-600">Job: <strong>{{ $contract->job->title }}</strong></p>
+        <a href="{{ route('contracts.show', $contract) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fa fa-arrow-left me-1"></i>Back to Contract
+        </a>
     </div>
 
-    <!-- Alert if resubmitting rejected -->
     @if($existingSubmission && $existingSubmission->isRejected())
-    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <div class="flex items-start">
-            <svg class="w-6 h-6 text-yellow-600 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-            <div>
-                <h3 class="font-semibold text-yellow-900">Previous Submission Rejected</h3>
-                <p class="text-yellow-800 mt-1"><strong>Reason:</strong> {{ $existingSubmission->rejection_reason }}</p>
-                <p class="text-yellow-800 mt-1">Please address the feedback and resubmit with improved evidence.</p>
-            </div>
-        </div>
+    <div class="alert alert-warning border mb-4">
+        <div class="fw-semibold mb-1"><i class="fa fa-exclamation-triangle me-1"></i>Previous Submission Rejected</div>
+        <div class="small"><strong>Admin feedback:</strong> {{ $existingSubmission->rejection_reason }}</div>
     </div>
     @endif
 
-    <form id="completionForm" class="bg-white rounded-lg shadow-md p-6 space-y-6">
+    <form id="completionForm" method="POST" action="{{ route('completion.store', $contract) }}" enctype="multipart/form-data">
         @csrf
-        
-        <!-- Submission Notes -->
-        <div>
-            <label for="submission_notes" class="block text-sm font-semibold text-gray-900 mb-2">
-                Completion Notes <span class="text-red-500">*</span>
-            </label>
-            <p class="text-sm text-gray-600 mb-3">
-                Describe what you have completed, the work performed, and how the deliverables meet the contract requirements.
-            </p>
-            <textarea
-                id="submission_notes"
-                name="submission_notes"
-                rows="6"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="I have completed all the requirements as per the contract. Here's what was delivered:
-1. ...
-2. ..."
-                required
-                minlength="20"
-                maxlength="2000"
-            ></textarea>
-            <p class="text-xs text-gray-500 mt-1">Minimum 20 characters, maximum 2000 characters</p>
-        </div>
 
-        <!-- Evidence/Attachments Section -->
-        <div>
-            <label class="block text-sm font-semibold text-gray-900 mb-2">
-                Evidence & Documents <span class="text-red-500">*</span>
-            </label>
-            <p class="text-sm text-gray-600 mb-4">
-                Upload all necessary evidence supporting your work completion (screenshots, reports, deliverable files, videos, etc.)
-            </p>
-
-            <!-- Attachments Container -->
-            <div id="attachmentsContainer" class="space-y-4 mb-4">
-                <!-- First attachment field is shown by default -->
-                <div class="attachment-item bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Document Type -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Document Type <span class="text-red-500">*</span>
-                            </label>
-                            <select name="attachments[0][document_type]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                                <option value="">Select type...</option>
-                                <option value="evidence">Evidence</option>
-                                <option value="report">Report</option>
-                                <option value="deliverable">Deliverable</option>
-                                <option value="screenshot">Screenshot</option>
-                                <option value="video">Video</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-
-                        <!-- File Upload -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                File <span class="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="file"
-                                name="attachments[0][file]"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-3 file:py-1 file:px-2 file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                required
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.mp4,.webm"
-                            />
-                            <p class="text-xs text-gray-500 mt-1">Max 10MB, Supported: PDF, Office, Images, Video, ZIP</p>
-                        </div>
-
-                        <!-- Remove Button -->
-                        <div class="flex items-end">
-                            <button type="button" class="w-full px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 remove-attachment" style="display: none;">
-                                Remove
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mt-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">
-                            Description (Optional)
-                        </label>
-                        <input
-                            type="text"
-                            name="attachments[0][description]"
-                            placeholder="Brief description of this file (e.g., 'Final screenshots of completed design')"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            maxlength="500"
-                        />
-                    </div>
-                </div>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Completion Notes</h6>
             </div>
-
-            <!-- Add More Attachments Button -->
-            <button type="button" id="addAttachment" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
-                + Add Another File
-            </button>
-            <p class="text-xs text-gray-500 mt-2">You can upload up to 10 files</p>
-        </div>
-
-        <!-- Contract Details Summary -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 class="font-semibold text-blue-900 mb-3">Contract Summary</h3>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <span class="text-gray-600">Total Contract Value:</span>
-                    <p class="font-semibold text-gray-900">{{ config('platform.currency') }} {{ number_format($contract->total_amount, 2) }}</p>
-                </div>
-                <div>
-                    <span class="text-gray-600">You Will Receive:</span>
-                    <p class="font-semibold text-green-600">{{ config('platform.currency') }} {{ number_format($contract->freelancer_amount, 2) }}</p>
-                </div>
-                <div>
-                    <span class="text-gray-600">Platform Fee ({{ config('platform.service_fee_percent') }}%):</span>
-                    <p class="font-semibold text-gray-900">{{ config('platform.currency') }} {{ number_format($contract->platform_fee, 2) }}</p>
-                </div>
-                <div>
-                    <span class="text-gray-600">Deadline:</span>
-                    <p class="font-semibold text-gray-900">{{ $contract->deadline->format('M d, Y') }}</p>
-                </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">Describe what was completed and how deliverables satisfy contract scope.</p>
+                <textarea id="submission_notes" name="submission_notes" rows="6" class="form-control" minlength="20" maxlength="2000" required placeholder="Write a clear completion summary..."></textarea>
+                <div class="form-text">Minimum 20 characters, maximum 2000 characters.</div>
             </div>
         </div>
 
-        <!-- Terms Agreement -->
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p class="text-sm text-gray-700 leading-relaxed">
-                <strong class="text-yellow-900">Important:</strong> By submitting your completion evidence, you confirm that:
-            </p>
-            <ul class="text-sm text-gray-700 mt-2 ml-4 list-disc space-y-1">
-                <li>All work submitted is original and meets the contract specifications</li>
-                <li>All necessary evidence is complete and accurately represents the work done</li>
-                <li>You are ready for admin verification and payment processing</li>
-                <li>Upon admin approval, payment will be automatically processed to your account</li>
-            </ul>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Evidence & Documents</h6>
+                <button type="button" id="addAttachment" class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-plus me-1"></i>Add File
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="attachmentsContainer" class="d-grid gap-3"></div>
+                <div class="form-text mt-2">Upload up to 10 files. Max 10MB each (PDF, Office, Images, ZIP, MP4, WEBM).</div>
+            </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex gap-3 pt-4 border-t border-gray-200">
-            <a href="{{ route('contracts.show', $contract) }}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                Cancel
-            </a>
-            <button
-                type="submit"
-                class="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-                Submit Completion Evidence
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold">Settlement Summary</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 small">
+                    <div class="col-md-3">
+                        <div class="text-muted">Contract Total</div>
+                        <div class="fw-semibold">{{ config('platform.currency') }} {{ number_format($contract->total_amount, 2) }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted">Platform Fee</div>
+                        <div class="fw-semibold">{{ config('platform.currency') }} {{ number_format($contract->platform_fee, 2) }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted">Freelancer Receives</div>
+                        <div class="fw-semibold text-success">{{ config('platform.currency') }} {{ number_format($contract->freelancer_amount, 2) }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted">Deadline</div>
+                        <div class="fw-semibold">{{ $contract->deadline?->format('d M Y') ?? 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{{ route('contracts.show', $contract) }}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" id="submitBtn" class="btn btn-primary">
+                <i class="fa fa-paper-plane me-1"></i>Submit Completion Evidence
             </button>
         </div>
     </form>
@@ -187,27 +84,21 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let attachmentCount = 1;
-    const maxAttachments = 10;
+(function () {
     const container = document.getElementById('attachmentsContainer');
     const addBtn = document.getElementById('addAttachment');
     const form = document.getElementById('completionForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const maxAttachments = 10;
+    let count = 0;
 
-    // Add attachment field
-    addBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (attachmentCount >= maxAttachments) {
-            alert(`Maximum ${maxAttachments} attachments allowed`);
-            return;
-        }
-
-        const html = `
-            <div class="attachment-item bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Document Type <span class="text-red-500">*</span></label>
-                        <select name="attachments[${attachmentCount}][document_type]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+    function createAttachmentRow(index) {
+        return `
+            <div class="border rounded p-3 attachment-item" data-index="${index}">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small">Document Type <span class="text-danger">*</span></label>
+                        <select name="attachments[${index}][document_type]" class="form-select" required>
                             <option value="">Select type...</option>
                             <option value="evidence">Evidence</option>
                             <option value="report">Report</option>
@@ -217,100 +108,84 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="other">Other</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">File <span class="text-red-500">*</span></label>
-                        <input type="file" name="attachments[${attachmentCount}][file]" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 file:mr-3 file:py-1 file:px-2 file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.mp4,.webm" />
-                        <p class="text-xs text-gray-500 mt-1">Max 10MB</p>
+                    <div class="col-md-4">
+                        <label class="form-label small">File <span class="text-danger">*</span></label>
+                        <input type="file" name="attachments[${index}][file]" class="form-control" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.zip,.mp4,.webm">
                     </div>
-                    <div class="flex items-end">
-                        <button type="button" class="w-full px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 remove-attachment">Remove</button>
+                    <div class="col-md-4">
+                        <label class="form-label small">Description (Optional)</label>
+                        <input type="text" name="attachments[${index}][description]" class="form-control" maxlength="500" placeholder="Short description">
                     </div>
-                </div>
-                <div class="mt-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-                    <input type="text" name="attachments[${attachmentCount}][description]" placeholder="Brief description of this file" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" maxlength="500" />
+                    <div class="col-md-1 d-grid">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-attachment" title="Remove">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
-
-        container.insertAdjacentHTML('beforeend', html);
-        attachmentCount++;
-        updateRemoveButtons();
-    });
-
-    // Remove attachment field
-    container.addEventListener('click', (e) => {
-        if (e.target.classList.contains('remove-attachment')) {
-            e.preventDefault();
-            e.target.closest('.attachment-item').remove();
-            attachmentCount--;
-            updateRemoveButtons();
-        }
-    });
-
-    function updateRemoveButtons() {
-        const items = container.querySelectorAll('.attachment-item');
-        items.forEach(item => {
-            const btn = item.querySelector('.remove-attachment');
-            btn.style.display = items.length > 1 ? 'block' : 'none';
-        });
-        addBtn.disabled = attachmentCount >= maxAttachments;
     }
 
-    // Form submission
+    function addAttachment() {
+        if (container.querySelectorAll('.attachment-item').length >= maxAttachments) {
+            alert(`Maximum ${maxAttachments} attachments allowed.`);
+            return;
+        }
+        container.insertAdjacentHTML('beforeend', createAttachmentRow(count));
+        count += 1;
+        refreshRemoveButtons();
+    }
+
+    function refreshRemoveButtons() {
+        const rows = container.querySelectorAll('.attachment-item');
+        rows.forEach((row) => {
+            const btn = row.querySelector('.remove-attachment');
+            btn.style.visibility = rows.length > 1 ? 'visible' : 'hidden';
+        });
+    }
+
+    addBtn.addEventListener('click', addAttachment);
+
+    container.addEventListener('click', (e) => {
+        const button = e.target.closest('.remove-attachment');
+        if (!button) return;
+        button.closest('.attachment-item').remove();
+        refreshRemoveButtons();
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        
+        const data = new FormData(form);
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Submitting...';
+
         try {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-            
             const response = await fetch(form.action, {
                 method: 'POST',
-                body: formData,
+                body: data,
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                 }
             });
 
-            const data = await response.json();
-
-            if (data.success) {
-                showAlert('success', data.message);
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 2000);
-            } else {
-                showAlert('error', data.message);
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Submission failed.');
             }
+
+            alert(payload.message);
+            window.location.href = payload.redirect;
         } catch (error) {
-            showAlert('error', 'An error occurred. Please try again.');
-            console.error(error);
+            alert(error.message || 'Submission failed.');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            submitBtn.innerHTML = '<i class="fa fa-paper-plane me-1"></i>Submit Completion Evidence';
         }
     });
 
-    function showAlert(type, message) {
-        const alertHtml = `
-            <div class="fixed top-4 right-4 p-4 rounded-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} shadow-lg max-w-md">
-                ${message}
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', alertHtml);
-        setTimeout(() => {
-            document.querySelector('.fixed').remove();
-        }, 5000);
-    }
-
-    updateRemoveButtons();
-});
+    addAttachment();
+})();
 </script>
 @endpush
 @endsection

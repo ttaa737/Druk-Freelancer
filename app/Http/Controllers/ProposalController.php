@@ -11,6 +11,8 @@ use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ProposalController extends Controller
 {
@@ -34,28 +36,46 @@ class ProposalController extends Controller
         abort_if($job->status !== 'open', 422, 'This job is no longer accepting proposals.');
         abort_if(Proposal::where('job_id', $job->id)->where('freelancer_id', Auth::id())->exists(), 422, 'You have already submitted a proposal for this job.');
 
-        $validated = $request->validate([
+        $validated = Validator::make($request->all(), [
             'cover_letter'           => 'required|string|min:50|max:3000',
-            'bid_amount'             => [
-                'required',
-                'numeric',
-                'min:300',
-                'max:500000',
-            ],
+            'cv_file'                => 'required|file|max:10240|mimes:pdf,doc,docx',
+            'bid_amount'             => 'required|numeric',
             'delivery_days'          => 'required|integer|min:1|max:365',
             'milestones'             => 'nullable|array|min:1|max:10',
             'milestones.*.title'     => 'required_with:milestones|string|max:200',
             'milestones.*.amount'    => 'required_with:milestones|numeric|min:100',
             'milestones.*.duration'  => 'required_with:milestones|integer|min:1',
-        ]);
+        ])->after(function ($validator) use ($job, $request) {
+            $bidAmount = (float) $request->input('bid_amount');
 
-        $proposal = DB::transaction(function () use ($job, $validated) {
+            if ($job->budget_min !== null && $bidAmount < (float) $job->budget_min) {
+                $validator->errors()->add(
+                    'bid_amount',
+                    'The bid amount cannot be lower than the project minimum budget of Nu. ' . number_format($job->budget_min) . '.'
+                );
+            }
+
+            if ($job->budget_max !== null && $bidAmount > (float) $job->budget_max) {
+                $validator->errors()->add(
+                    'bid_amount',
+                    'The bid amount cannot be higher than the project maximum budget of Nu. ' . number_format($job->budget_max) . '.'
+                );
+            }
+        })->validate();
+
+        $cvFile = $request->file('cv_file');
+        $cvFilePath = $cvFile?->store('proposal-cvs', 'public');
+        $cvFileName = $cvFile?->getClientOriginalName();
+
+        $proposal = DB::transaction(function () use ($job, $validated, $cvFilePath, $cvFileName) {
             $proposal = Proposal::create([
                 'job_id'        => $job->id,
                 'freelancer_id' => Auth::id(),
                 'cover_letter'  => $validated['cover_letter'],
                 'bid_amount'    => $validated['bid_amount'],
                 'delivery_days' => $validated['delivery_days'],
+                'cv_file_path'  => $cvFilePath,
+                'cv_file_name'  => $cvFileName,
             ]);
 
             if (!empty($validated['milestones'])) {
@@ -107,6 +127,37 @@ class ProposalController extends Controller
         $proposal->load(['job', 'freelancer.profile', 'freelancer.reviews', 'freelancer.certifications', 'milestones']);
 
         return view('proposals.show', compact('proposal'));
+    }
+
+    /**
+     * Download the freelancer CV attached to a proposal.
+     */
+    public function downloadCv(Proposal $proposal)
+    {
+        $this->authorize('view', $proposal);
+
+        abort_unless($proposal->cv_file_path, 404, 'No CV file was uploaded for this proposal.');
+
+        return Storage::disk('public')->download(
+            $proposal->cv_file_path,
+            $proposal->cv_file_name ?? basename($proposal->cv_file_path)
+        );
+    }
+
+    /**
+     * View the freelancer CV attached to a proposal in the browser.
+     */
+    public function viewCv(Proposal $proposal)
+    {
+        $this->authorize('view', $proposal);
+
+        abort_unless($proposal->cv_file_path, 404, 'No CV file was uploaded for this proposal.');
+
+        return Storage::disk('public')->response(
+            $proposal->cv_file_path,
+            $proposal->cv_file_name ?? basename($proposal->cv_file_path),
+            ['Content-Disposition' => 'inline']
+        );
     }
 
     /**

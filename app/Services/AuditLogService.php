@@ -14,10 +14,11 @@ class AuditLogService
         $model = null,
         array $oldValues = [],
         array $newValues = [],
-        string $notes = null
+        ?string $notes = null,
+        ?int $userId = null
     ): AuditLog {
         return AuditLog::create([
-            'user_id'        => auth()->id(),
+            'user_id'        => $userId ?? auth()->id(),
             'event'          => $event,
             'action'         => $event,
             'auditable_type' => $model ? get_class($model) : null,

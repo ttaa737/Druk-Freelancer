@@ -71,6 +71,24 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        if ($request->input('section') === 'skills') {
+            $validated = $request->validate([
+                'skills'   => 'nullable|array',
+                'skills.*' => 'exists:skills,id',
+            ]);
+
+            $skillsWithLevel = [];
+            foreach ($validated['skills'] ?? [] as $skillId) {
+                $skillsWithLevel[$skillId] = ['level' => $request->input("skill_level_{$skillId}", 'intermediate')];
+            }
+
+            $user->skills()->sync($skillsWithLevel);
+
+            AuditLogService::log('profile.skills.updated', $user);
+
+            return redirect()->route('profile.edit')->with('success', 'Skills updated successfully!');
+        }
+
         $validated = $request->validate([
             'name'              => 'required|string|max:255',
             'phone'             => 'nullable|string|max:20|unique:users,phone,' . $user->id,
@@ -122,9 +140,9 @@ class ProfileController extends Controller
 
         $user->profile()->updateOrCreate(['user_id' => $user->id], $profileData);
 
-        if (!empty($validated['skills'])) {
+        if ($request->has('skills')) {
             $skillsWithLevel = [];
-            foreach ($validated['skills'] as $skillId) {
+            foreach ($validated['skills'] ?? [] as $skillId) {
                 $skillsWithLevel[$skillId] = ['level' => $request->input("skill_level_{$skillId}", 'intermediate')];
             }
             $user->skills()->sync($skillsWithLevel);
@@ -164,6 +182,37 @@ class ProfileController extends Controller
     }
 
     /**
+     * View a verification document in the browser.
+     */
+    public function viewDocument(VerificationDocument $document)
+    {
+        $this->authorizeVerificationDocumentAccess($document);
+
+        abort_unless($document->file_path && Storage::disk('public')->exists($document->file_path), 404, 'Document file not found.');
+
+        return Storage::disk('public')->response(
+            $document->file_path,
+            $document->original_name ?? basename($document->file_path),
+            ['Content-Disposition' => 'inline']
+        );
+    }
+
+    /**
+     * Download a verification document.
+     */
+    public function downloadDocument(VerificationDocument $document)
+    {
+        $this->authorizeVerificationDocumentAccess($document);
+
+        abort_unless($document->file_path && Storage::disk('public')->exists($document->file_path), 404, 'Document file not found.');
+
+        return Storage::disk('public')->download(
+            $document->file_path,
+            $document->original_name ?? basename($document->file_path)
+        );
+    }
+
+    /**
      * Send phone OTP for verification.
      */
     public function sendPhoneOTP()
@@ -194,6 +243,11 @@ class ProfileController extends Controller
         }
 
         return back()->withErrors(['otp' => 'Invalid or expired OTP.']);
+    }
+
+    private function authorizeVerificationDocumentAccess(VerificationDocument $document): void
+    {
+        abort_unless(Auth::user()->isAdmin() || $document->user_id === Auth::id(), 403);
     }
 }
 

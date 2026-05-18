@@ -24,7 +24,7 @@ class CompletionSubmissionPolicy
         // Freelancer, poster, or admin can view
         return $user->id === $submission->freelancer_id ||
                $user->id === $submission->contract->poster_id ||
-               $user->is_admin ||
+               $user->isAdmin() ||
                $user->hasRole('admin');
     }
 
@@ -33,7 +33,7 @@ class CompletionSubmissionPolicy
      */
     public function verify(User $user): bool
     {
-        return $user->is_admin || $user->hasRole('admin');
+        return $user->isAdmin() || $user->hasRole('admin');
     }
 
     /**
@@ -41,22 +41,6 @@ class CompletionSubmissionPolicy
      */
     public function reject(User $user): bool
     {
-        return $user->is_admin || $user->hasRole('admin');
-    }
-}
-
-class CompletionSubmissionAttachmentPolicy
-{
-    /**
-     * Only authorized users can download
-     */
-    public function download(User $user, CompletionSubmissionAttachment $attachment): bool
-    {
-        $submission = $attachment->completionSubmission;
-
-        return $user->id === $submission->freelancer_id ||
-               $user->id === $submission->contract->poster_id ||
-               $user->is_admin ||
-               $user->hasRole('admin');
+        return $user->isAdmin() || $user->hasRole('admin');
     }
 }

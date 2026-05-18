@@ -293,6 +293,36 @@ class NotificationService
     }
 
     /**
+     * Notify admins when a freelancer submits completion evidence.
+     */
+    public static function completionSubmittedToAdmins($submission): void
+    {
+        $admins = User::query()
+            ->where('role', 'admin')
+            ->orWhereHas('roles', function ($query) {
+                $query->where('name', 'admin');
+            })
+            ->get()
+            ->unique('id');
+
+        foreach ($admins as $admin) {
+            self::send(
+                $admin,
+                'completion_review_required',
+                'New Completion Submission Needs Verification',
+                "Freelancer {$submission->freelancer->name} submitted completion evidence for contract #{$submission->contract->contract_number}.",
+                [
+                    'submission_id' => $submission->id,
+                    'contract_id' => $submission->contract_id,
+                    'url' => route('admin.completions.show', $submission),
+                    'icon' => 'clipboard-check',
+                ],
+                false
+            );
+        }
+    }
+
+    /**
      * Notify freelancer when completion is verified/approved.
      */
     public static function completionApproved(User $freelancer, $submission): void
@@ -311,6 +341,26 @@ class NotificationService
     }
 
     /**
+     * Notify job poster that admin verified completion and payment has been released.
+     */
+    public static function completionApprovedPoster(User $poster, $submission): void
+    {
+        self::send(
+            $poster,
+            'completion_approved',
+            'Completion Verified by Admin',
+            "Admin verified completion for contract #{$submission->contract->contract_number}. Payment has been released to the freelancer.",
+            [
+                'submission_id' => $submission->id,
+                'contract_id' => $submission->contract_id,
+                'url' => route('contracts.show', $submission->contract_id),
+                'icon' => 'check-circle',
+            ],
+            false
+        );
+    }
+
+    /**
      * Notify freelancer when completion is rejected.
      */
     public static function completionRejected(User $freelancer, $submission): void
@@ -326,5 +376,25 @@ class NotificationService
         } catch (\Exception $e) {
             Log::error("Completion rejected email failed for freelancer {$freelancer->id}: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Notify job poster that admin rejected completion and freelancer must resubmit.
+     */
+    public static function completionRejectedPoster(User $poster, $submission): void
+    {
+        self::send(
+            $poster,
+            'completion_rejected',
+            'Completion Needs Rework',
+            "Admin rejected completion for contract #{$submission->contract->contract_number}. Freelancer has been asked to resubmit corrected evidence.",
+            [
+                'submission_id' => $submission->id,
+                'contract_id' => $submission->contract_id,
+                'url' => route('contracts.show', $submission->contract_id),
+                'icon' => 'redo',
+            ],
+            false
+        );
     }
 }

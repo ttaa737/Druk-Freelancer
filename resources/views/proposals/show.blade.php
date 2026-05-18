@@ -111,6 +111,26 @@
             </div>
         </div>
 
+        @if($proposal->cv_file_path)
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <h6 class="mb-0 fw-bold"><i class="fa fa-file-pdf me-2"></i>Freelancer CV</h6>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ route('proposals.cv.view', $proposal) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                        <i class="fa fa-eye me-1"></i>View CV
+                    </a>
+                    <a href="{{ route('proposals.cv.download', $proposal) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa fa-download me-1"></i>Download CV
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-2 text-muted small">File: {{ $proposal->cv_file_name ?? basename($proposal->cv_file_path) }}</p>
+                <p class="mb-0 text-muted small">This CV was uploaded with the proposal and is available to the job poster and the freelancer.</p>
+            </div>
+        </div>
+        @endif
+
         {{-- Proposed Milestones --}}
         @if($proposal->milestones->isNotEmpty())
         <div class="card mb-3 shadow-sm">
