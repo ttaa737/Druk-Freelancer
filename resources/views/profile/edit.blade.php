@@ -309,51 +309,72 @@
                             </div>
                         </div>
 
+                        {{-- Requirements Summary --}}
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <h6 class="fw-bold mb-3"><i class="fa fa-list-check text-info me-1"></i>Document Requirements</h6>
+                            @if(auth()->user()->isFreelancer())
+                                <div class="small">
+                                    <div class="mb-2"><i class="fa fa-check-circle text-danger me-1"></i> <strong>Citizenship ID (CID)</strong> - Required</div>
+                                    <div class="mb-2"><i class="fa fa-check-circle text-danger me-1"></i> <strong>Curriculum Vitae (CV)</strong> - Required</div>
+                                    <div><i class="fa fa-circle text-muted me-1" style="font-size:7px"></i> <strong>Business License</strong> - Optional (if you run a business)</div>
+                                </div>
+                            @else
+                                <div class="small">
+                                    <div class="mb-2"><i class="fa fa-check-circle text-danger me-1"></i> <strong>Citizenship ID (CID)</strong> - Required</div>
+                                    <div><i class="fa fa-circle text-muted me-1" style="font-size:7px"></i> <strong>Business License / BRN</strong> - Optional</div>
+                                </div>
+                            @endif
+                        </div>
+
                         <h6 class="fw-bold mb-3 text-muted text-uppercase" style="font-size:11px;letter-spacing:1px">
                             <i class="fa fa-file-upload me-1"></i> Required Documents
                         </h6>
-                        <p class="text-muted small mb-3">Upload the documents below to complete verification. Accepted files: PDF, JPG, or PNG up to 5 MB.</p>
+                        <p class="text-muted small mb-3">Upload the documents below to complete verification. Accepted files: PDF, JPG, PNG, DOC, DOCX up to 5 MB.</p>
 
                         {{-- Document Upload Forms --}}
                         @php
-                            $documentTypes = [
-                                [
-                                    'type' => 'cid',
-                                    'label' => 'Citizenship ID (CID)',
-                                    'icon' => 'fa-id-card',
-                                    'description' => 'Upload a clear photo or scan of your Bhutanese CID (both front and back)',
-                                    'placeholder' => 'CID Number (e.g., 11509000001)',
-                                    'required' => true
-                                ],
-                                [
-                                    'type' => 'license',
-                                    'label' => 'Professional License / BRN',
-                                    'icon' => 'fa-certificate',
-                                    'description' => 'Business Registration Number or professional license certificate',
-                                    'placeholder' => 'License/BRN Number',
-                                    'required' => auth()->user()->isJobPoster()
-                                ],
-                                [
-                                    'type' => 'education',
-                                    'label' => 'Education Certificate',
-                                    'icon' => 'fa-graduation-cap',
-                                    'description' => 'Highest education qualification or relevant certification',
-                                    'placeholder' => 'Certificate Number (optional)',
-                                    'required' => false
-                                ],
-                                [
-                                    'type' => 'tax_certificate',
-                                    'label' => 'Tax Clearance Certificate',
-                                    'icon' => 'fa-file-invoice',
-                                    'description' => 'Valid tax clearance from Department of Revenue and Customs',
-                                    'placeholder' => 'TPN/CID Number',
-                                    'required' => false
-                                ],
+                            $documentTypes = [];
+                            
+                            // All users must upload CID
+                            $documentTypes[] = [
+                                'type' => 'cid',
+                                'label' => 'Citizenship ID (CID)',
+                                'icon' => 'fa-id-card',
+                                'description' => 'Upload a clear photo or scan of your Bhutanese CID (both front and back)',
+                                'placeholder' => 'CID Number (e.g., 11509000001)',
+                                'required' => true,
+                                'showFor' => ['freelancer', 'job_poster']
+                            ];
+
+                            // Freelancers must upload CV
+                            if (auth()->user()->isFreelancer()) {
+                                $documentTypes[] = [
+                                    'type' => 'cv',
+                                    'label' => 'Curriculum Vitae (CV)',
+                                    'icon' => 'fa-file-pdf',
+                                    'description' => 'Upload your CV/Resume. This will be automatically attached to your job proposals.',
+                                    'placeholder' => 'N/A',
+                                    'required' => true,
+                                    'showFor' => ['freelancer']
+                                ];
+                            }
+
+                            // Optional: Business License for both roles
+                            $documentTypes[] = [
+                                'type' => 'brn',
+                                'label' => 'Business License / BRN',
+                                'icon' => 'fa-certificate',
+                                'description' => 'Business Registration Number or professional license certificate (optional)',
+                                'placeholder' => 'License/BRN Number',
+                                'required' => false,
+                                'showFor' => auth()->user()->isFreelancer() ? ['freelancer'] : ['job_poster']
                             ];
                         @endphp
 
                         @foreach($documentTypes as $docType)
-                            @php $doc = auth()->user()->verificationDocuments->where('document_type', $docType['type'])->first(); @endphp
+                            @php 
+                                $doc = auth()->user()->verificationDocuments->where('document_type', $docType['type'])->first();
+                            @endphp
                             <div class="card mb-3 {{ $doc && $doc->status==='approved' ? 'border-success' : '' }}">
                                 <div class="card-header bg-light py-2 px-3">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -362,6 +383,8 @@
                                             <span class="fw-semibold">{{ $docType['label'] }}</span>
                                             @if($docType['required'])
                                                 <span class="badge bg-danger ms-2" style="font-size:9px">REQUIRED</span>
+                                            @else
+                                                <span class="badge bg-secondary ms-2" style="font-size:9px">OPTIONAL</span>
                                             @endif
                                         </div>
                                         @if($doc)
@@ -421,18 +444,23 @@
                                             @csrf
                                             <input type="hidden" name="document_type" value="{{ $docType['type'] }}">
                                             <div class="row g-3">
-                                                <div class="col-md-4">
-                                                    <label class="form-label small fw-semibold">Document Number</label>
-                                                    <input type="text" name="document_number" class="form-control form-control-sm" 
-                                                           placeholder="{{ $docType['placeholder'] }}"
-                                                           {{ $docType['type'] === 'cid' ? 'required' : '' }}>
-                                                    <div class="invalid-feedback">Please enter document number.</div>
-                                                </div>
-                                                <div class="col-md-5">
+                                                @if($docType['type'] !== 'cv')
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-semibold">
+                                                            Document Number
+                                                            @if($docType['type'] === 'cid') <span class="text-danger">*</span> @endif
+                                                        </label>
+                                                        <input type="text" name="document_number" class="form-control form-control-sm" 
+                                                               placeholder="{{ $docType['placeholder'] }}"
+                                                               {{ $docType['type'] === 'cid' ? 'required' : '' }}>
+                                                        <div class="invalid-feedback">Please enter document number.</div>
+                                                    </div>
+                                                @endif
+                                                <div class="col-md-{{ $docType['type'] === 'cv' ? '7' : '5' }}">
                                                     <label class="form-label small fw-semibold">Upload File <span class="text-danger">*</span></label>
                                                     <input type="file" name="document_file" class="form-control form-control-sm" 
-                                                           accept=".pdf,.jpg,.jpeg,.png" required>
-                                                    <div class="form-text" style="font-size:10px">PDF, JPG, PNG (max 5 MB)</div>
+                                                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required>
+                                                    <div class="form-text" style="font-size:10px">PDF, JPG, PNG, DOC, DOCX (max 5 MB)</div>
                                                     <div class="invalid-feedback">Please select a file.</div>
                                                 </div>
                                                 <div class="col-md-3 d-flex align-items-end">
@@ -452,10 +480,11 @@
                             <h6 class="fw-bold mb-2"><i class="fa fa-lightbulb text-warning me-1"></i> Document Guidelines</h6>
                             <ul class="small mb-0 ps-3">
                                 <li>Ensure documents are clear, readable, and not blurred</li>
-                                <li>All four corners of the document should be visible</li>
+                                <li>For CID: All four corners of the document should be visible (both front and back)</li>
+                                <li>For CV: Ensure your full name, contact information, and qualifications are clearly visible</li>
                                 <li>Documents must be valid and not expired</li>
                                 <li>File size should not exceed 5 MB</li>
-                                <li>Accepted formats: PDF, JPG, JPEG, PNG</li>
+                                <li>Accepted formats: PDF, JPG, JPEG, PNG, DOC, DOCX</li>
                                 <li>Personal information must match your profile name</li>
                             </ul>
                         </div>

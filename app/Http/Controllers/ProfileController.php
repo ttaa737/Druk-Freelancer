@@ -154,31 +154,103 @@ class ProfileController extends Controller
     }
 
     /**
-     * Upload verification document (CID/BRN).
+     * Upload verification document (CID/BRN/CV).
+     * 
+     * Updated requirements:
+     * - All users: CID (REQUIRED)
+     * - Freelancers: CID + CV (both REQUIRED)
+     * - Job Posters: CID (REQUIRED) + Business License (optional)
      */
     public function uploadDocument(Request $request)
     {
-        $request->validate([
-            'document_type'   => 'required|in:cid,brn,tax_certificate,license,other',
-            'document_number' => 'nullable|string|max:50',
-            'document_file'   => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-        ]);
+        $user = Auth::user();
+        $documentType = $request->input('document_type');
+        
+        // Build validation rules
+        $rules = [
+            'document_type'   => 'required|in:cid,cv,brn,other',
+            'document_file'   => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
+        ];
+        
+        // Add document_number validation - required for CID and BRN, nullable for others
+        if (in_array($documentType, ['cid', 'brn'])) {
+            $rules['document_number'] = 'required|string|max:50';
+        } else {
+            $rules['document_number'] = 'nullable|string|max:50';
+        }
+        
+        $request->validate($rules);
 
         $path = $request->file('document_file')->store('verification-docs', 'public');
 
         $doc = VerificationDocument::create([
             'user_id'         => Auth::id(),
-            'document_type'   => $request->document_type,
+            'document_type'   => $documentType,
             'document_number' => $request->document_number,
             'file_path'       => $path,
             'original_name'   => $request->file('document_file')->getClientOriginalName(),
             'status'          => 'pending',
+            'is_required'     => $this->isDocumentRequired($documentType, $user),
+            'role_required'   => $this->getRoleRequired($documentType),
         ]);
+
+        // Trigger update verification check
+        $this->checkVerificationCompletion($user);
 
         NotificationService::adminNewVerificationRequest(Auth::user());
         AuditLogService::log('document.uploaded', $doc, notes: $request->document_type);
 
         return back()->with('success', 'Document uploaded. Our team will verify it within 1-2 business days.');
+    }
+
+    /**
+     * Determine if a document is required for the current user
+     */
+    private function isDocumentRequired(string $documentType, $user): bool
+    {
+        return match ($documentType) {
+            'cid' => true, // CID is required for all users
+            'cv' => $user->isFreelancer(), // CV required only for freelancers
+            'brn' => false, // BRN is optional for job posters
+            default => false,
+        };
+    }
+
+    /**
+     * Get which roles require a specific document
+     */
+    private function getRoleRequired(string $documentType): ?string
+    {
+        return match ($documentType) {
+            'cid' => 'freelancer,job_poster', // Both roles
+            'cv' => 'freelancer', // Only freelancers
+            'brn' => 'job_poster', // Only job posters (optional)
+            default => null,
+        };
+    }
+
+    /**
+     * Check if user's verification is now complete and update status
+     */
+    private function checkVerificationCompletion($user): void
+    {
+        $requiredDocs = $user->isFreelancer() 
+            ? ['cid', 'cv']
+            : ['cid'];
+
+        $approvedDocs = $user->verificationDocuments()
+            ->where('status', 'approved')
+            ->pluck('document_type')
+            ->toArray();
+
+        $allRequired = count(array_intersect($requiredDocs, $approvedDocs)) === count($requiredDocs);
+
+        if ($allRequired && $user->verification_status !== 'verified') {
+            $user->update([
+                'verification_status' => 'verified',
+                'has_approved_cv' => in_array('cv', $approvedDocs),
+            ]);
+        }
     }
 
     /**

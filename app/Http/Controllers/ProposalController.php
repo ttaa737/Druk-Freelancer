@@ -24,6 +24,10 @@ class ProposalController extends Controller
 
     /**
      * Submit a new proposal (freelancer only).
+     * 
+     * Updated: Freelancers can either:
+     * 1. Upload a CV with their proposal (traditional method)
+     * 2. Use their verified CV from account verification (auto-attached)
      */
     public function store(Request $request, Job $job)
     {
@@ -36,16 +40,26 @@ class ProposalController extends Controller
         abort_if($job->status !== 'open', 422, 'This job is no longer accepting proposals.');
         abort_if(Proposal::where('job_id', $job->id)->where('freelancer_id', Auth::id())->exists(), 422, 'You have already submitted a proposal for this job.');
 
+        $user = Auth::user();
+        $useVerifiedCV = $request->boolean('use_verified_cv', false);
+        
+        // Get freelancer's verified CV if they have one
+        $verifiedCV = $user->verificationDocuments()
+            ->where('document_type', 'cv')
+            ->where('status', 'approved')
+            ->first();
+
         $validated = Validator::make($request->all(), [
             'cover_letter'           => 'required|string|min:50|max:3000',
-            'cv_file'                => 'required|file|max:10240|mimes:pdf,doc,docx',
+            'cv_file'                => ($useVerifiedCV && $verifiedCV) ? 'nullable' : 'required|file|max:10240|mimes:pdf,doc,docx',
+            'use_verified_cv'        => 'nullable|boolean',
             'bid_amount'             => 'required|numeric',
             'delivery_days'          => 'required|integer|min:1|max:365',
             'milestones'             => 'nullable|array|min:1|max:10',
             'milestones.*.title'     => 'required_with:milestones|string|max:200',
             'milestones.*.amount'    => 'required_with:milestones|numeric|min:100',
             'milestones.*.duration'  => 'required_with:milestones|integer|min:1',
-        ])->after(function ($validator) use ($job, $request) {
+        ])->after(function ($validator) use ($job, $request, $useVerifiedCV, $verifiedCV) {
             $bidAmount = (float) $request->input('bid_amount');
 
             if ($job->budget_min !== null && $bidAmount < (float) $job->budget_min) {
@@ -61,21 +75,54 @@ class ProposalController extends Controller
                     'The bid amount cannot be higher than the project maximum budget of Nu. ' . number_format($job->budget_max) . '.'
                 );
             }
+
+            // If using verified CV but none exists, show error
+            if ($useVerifiedCV && !$verifiedCV) {
+                $validator->errors()->add(
+                    'use_verified_cv',
+                    'You do not have a verified CV on file. Please upload a CV with this proposal.'
+                );
+            }
+
+            // If not using verified CV, a file must be uploaded
+            if (!$useVerifiedCV && !$request->hasFile('cv_file')) {
+                $validator->errors()->add(
+                    'cv_file',
+                    'Please either upload a CV or use your verified CV.'
+                );
+            }
         })->validate();
 
-        $cvFile = $request->file('cv_file');
-        $cvFilePath = $cvFile?->store('proposal-cvs', 'public');
-        $cvFileName = $cvFile?->getClientOriginalName();
+        // Handle CV - either use verified or upload new one
+        $cvFilePath = null;
+        $cvFileName = null;
+        $cvFromVerification = false;
+        $cvDocumentId = null;
 
-        $proposal = DB::transaction(function () use ($job, $validated, $cvFilePath, $cvFileName) {
+        if ($useVerifiedCV && $verifiedCV) {
+            // Use verified CV from account verification
+            $cvFromVerification = true;
+            $cvDocumentId = $verifiedCV->id;
+            $cvFilePath = $verifiedCV->file_path;
+            $cvFileName = $verifiedCV->original_name;
+        } else {
+            // Upload new CV file
+            $cvFile = $request->file('cv_file');
+            $cvFilePath = $cvFile?->store('proposal-cvs', 'public');
+            $cvFileName = $cvFile?->getClientOriginalName();
+        }
+
+        $proposal = DB::transaction(function () use ($job, $validated, $cvFilePath, $cvFileName, $cvFromVerification, $cvDocumentId) {
             $proposal = Proposal::create([
-                'job_id'        => $job->id,
-                'freelancer_id' => Auth::id(),
-                'cover_letter'  => $validated['cover_letter'],
-                'bid_amount'    => $validated['bid_amount'],
-                'delivery_days' => $validated['delivery_days'],
-                'cv_file_path'  => $cvFilePath,
-                'cv_file_name'  => $cvFileName,
+                'job_id'                => $job->id,
+                'freelancer_id'         => Auth::id(),
+                'cover_letter'          => $validated['cover_letter'],
+                'bid_amount'            => $validated['bid_amount'],
+                'delivery_days'         => $validated['delivery_days'],
+                'cv_file_path'          => $cvFilePath,
+                'cv_file_name'          => $cvFileName,
+                'cv_from_verification'  => $cvFromVerification,
+                'cv_document_id'        => $cvDocumentId,
             ]);
 
             if (!empty($validated['milestones'])) {
@@ -96,7 +143,7 @@ class ProposalController extends Controller
         });
 
         NotificationService::newProposalReceived($job->poster, $proposal->load('freelancer', 'job'));
-        AuditLogService::log('proposal.submitted', $proposal, notes: "Bid: Nu.{$validated['bid_amount']} for job #{$job->id}");
+        AuditLogService::log('proposal.submitted', $proposal, notes: "Bid: Nu.{$validated['bid_amount']} for job #{$job->id} " . ($cvFromVerification ? '(Verified CV)' : '(Custom CV)'));
 
         return redirect()->route('jobs.show', $job->slug)
                          ->with('success', 'Your proposal has been submitted successfully!');

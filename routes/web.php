@@ -150,6 +150,14 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::post('/payment-method', [WalletController::class, 'addPaymentMethod'])->name('payment-method.add');
     });
 
+    // ── Reports (role aware) ─────────────────────────────────────────────────
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/jobs', [App\Http\Controllers\ReportsController::class, 'jobs'])->name('jobs');
+        Route::get('/applications', [App\Http\Controllers\ReportsController::class, 'applications'])->name('applications');
+        Route::get('/earnings', [App\Http\Controllers\ReportsController::class, 'earnings'])->name('earnings');
+        Route::get('/contracts', [App\Http\Controllers\ReportsController::class, 'contracts'])->name('contracts');
+    });
+
     // ── Reviews ───────────────────────────────────────────────────────────────
     Route::prefix('reviews')->name('reviews.')->group(function () {
         Route::get('/contracts/{contract}/create', [ReviewController::class, 'create'])->name('create');
@@ -245,6 +253,12 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
             Route::get('/{submission}', [AdminCompletionController::class, 'show'])->name('show');
             Route::post('/{submission}/verify', [AdminCompletionController::class, 'verify'])->name('verify');
             Route::post('/{submission}/reject', [AdminCompletionController::class, 'reject'])->name('reject');
+        });
+
+        // Admin Reports
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/users', [App\Http\Controllers\ReportsController::class, 'adminUsers'])->name('users');
+            Route::get('/financials', [App\Http\Controllers\ReportsController::class, 'adminFinancials'])->name('financials');
         });
     });
 });

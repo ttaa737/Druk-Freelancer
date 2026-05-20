@@ -143,8 +143,17 @@
 </div>
 @endforelse
 
-<div class="mt-4">
-    {{ $jobs->links() }}
+<div class="card shadow-sm mt-4">
+    <div class="card-body py-3">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <div class="text-muted small">
+                Showing {{ $jobs->firstItem() ?? 0 }} to {{ $jobs->lastItem() ?? 0 }} of {{ $jobs->total() }} results
+            </div>
+            <div class="ms-auto pagination-wrapper">
+                {{ $jobs->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+        </div>
+    </div>
 </div>
 
 @endsection

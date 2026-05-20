@@ -146,9 +146,18 @@
 </div>
 <?php endif; ?>
 
-<div class="mt-4">
-    <?php echo e($jobs->links()); ?>
+<div class="card shadow-sm mt-4">
+    <div class="card-body py-3">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <div class="text-muted small">
+                Showing <?php echo e($jobs->firstItem() ?? 0); ?> to <?php echo e($jobs->lastItem() ?? 0); ?> of <?php echo e($jobs->total()); ?> results
+            </div>
+            <div class="ms-auto pagination-wrapper">
+                <?php echo e($jobs->withQueryString()->links('pagination::bootstrap-5')); ?>
 
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php $__env->stopSection(); ?>
