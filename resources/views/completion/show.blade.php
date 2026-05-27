@@ -59,19 +59,53 @@
             </div>
             <div class="card-body">
                 @forelse($submission->attachments as $attachment)
-                <div class="border rounded p-3 mb-3">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                @php
+                    $inlineUrl = route('completion.download-attachment', $attachment) . '?inline=1';
+                    $mimeType = $attachment->file_type ?? '';
+                    $isImage = str_starts_with($mimeType, 'image/');
+                    $isVideo = str_starts_with($mimeType, 'video/');
+                    $isPdf = $mimeType === 'application/pdf';
+                @endphp
+                <div class="border rounded-3 p-3 mb-3 bg-white">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
                         <div>
                             <div class="fw-semibold">{{ $attachment->file_name }}</div>
-                            <div class="text-muted small">{{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB</div>
+                            <div class="text-muted small mt-1">{{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB</div>
                             @if($attachment->description)
-                            <div class="text-muted small mt-1">{{ $attachment->description }}</div>
+                            <div class="text-muted small mt-2">{{ $attachment->description }}</div>
                             @endif
                         </div>
-                        <a href="{{ route('completion.download-attachment', $attachment) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fa fa-download me-1"></i>Download
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{{ $inlineUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa fa-eye me-1"></i>Open Preview
+                            </a>
+                            <a href="{{ route('completion.download-attachment', $attachment) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-download me-1"></i>Download
+                            </a>
+                        </div>
                     </div>
+
+                    @if($isImage)
+                    <div class="rounded-3 border overflow-hidden bg-light-subtle">
+                        <img src="{{ $inlineUrl }}" alt="{{ $attachment->file_name }}" class="img-fluid w-100" style="max-height: 420px; object-fit: contain;" loading="lazy">
+                    </div>
+                    @elseif($isVideo)
+                    <div class="rounded-3 border overflow-hidden bg-dark">
+                        <video controls preload="metadata" class="w-100" style="max-height: 420px;">
+                            <source src="{{ $inlineUrl }}" type="{{ $mimeType }}">
+                            Your browser does not support video playback. Use the download button instead.
+                        </video>
+                    </div>
+                    @elseif($isPdf)
+                    <div class="rounded-3 border overflow-hidden bg-light-subtle" style="height: 520px;">
+                        <iframe src="{{ $inlineUrl }}" title="PDF preview for {{ $attachment->file_name }}" class="w-100 h-100 border-0"></iframe>
+                    </div>
+                    @else
+                    <div class="rounded-3 border bg-light-subtle p-4 text-center text-muted small">
+                        <i class="fa fa-file fa-lg d-block mb-2"></i>
+                        Preview is not available for this file type ({{ $mimeType ?: 'unknown' }}). Use Open Preview or Download.
+                    </div>
+                    @endif
                 </div>
                 @empty
                 <div class="text-muted">No files uploaded.</div>

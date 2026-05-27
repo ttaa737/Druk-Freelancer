@@ -50,6 +50,9 @@
         <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
             <i class="fa fa-tachometer-alt"></i> Dashboard
         </a>
+        <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+            <i class="fa fa-chart-line"></i> Reports
+        </a>
         <div class="section-label">Management</div>
         <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
             <i class="fa fa-users"></i> Users
@@ -73,6 +76,9 @@
         </a>
         <a href="{{ route('admin.verifications.index') }}" class="nav-link {{ request()->routeIs('admin.verifications.*') ? 'active' : '' }}">
             <i class="fa fa-id-card"></i> Verifications
+        </a>
+        <a href="{{ route('admin.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">
+            <i class="fa fa-star-half-alt"></i> Reviews
         </a>
         <a href="{{ route('admin.completions.index') }}" class="nav-link {{ request()->routeIs('admin.completions.*') ? 'active' : '' }}">
             <i class="fa fa-clipboard-check"></i> Work Completions

@@ -65,11 +65,10 @@
         </div>
 
         <?php $__empty_1 = true; $__currentLoopData = $jobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-        <div class="card mb-3 <?php echo e($job->is_featured ? 'border-warning' : ''); ?>">
+        <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        <?php if($job->is_featured): ?> <span class="badge bg-warning text-dark mb-1"><i class="fa fa-star me-1"></i>Featured</span> <?php endif; ?>
                         <h6 class="fw-bold mb-1">
                             <a href="<?php echo e(route('jobs.show', $job->slug)); ?>" class="text-dark text-decoration-none"><?php echo e($job->title); ?></a>
                         </h6>

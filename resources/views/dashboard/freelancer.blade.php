@@ -135,6 +135,12 @@
                             <small>Messages</small>
                         </a>
                     </div>
+                    <div class="col-6 col-sm-3">
+                        <a href="{{ route('reports.freelancer') }}" class="btn btn-outline-secondary w-100 py-2 d-flex flex-column align-items-center gap-1 text-decoration-none">
+                            <i class="fa fa-chart-line" style="color:#3b82f6"></i>
+                            <small>Reports</small>
+                        </a>
+                    </div>
                 </div>
                 @if($user->verification_status === 'verified')
                 <div class="alert alert-success py-2 px-3 mt-3 mb-0 d-flex align-items-center gap-2" style="font-size:.82rem">

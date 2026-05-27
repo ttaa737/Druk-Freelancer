@@ -65,7 +65,7 @@
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="table-light"><tr>
-                <th>Title</th><th>Poster</th><th>Budget</th><th>Status</th><th>Featured</th><th>Posted</th><th class="text-end">Actions</th>
+                <th>Title</th><th>Poster</th><th>Budget</th><th>Status</th><th>Posted</th><th class="text-end">Actions</th>
             </tr></thead>
             <tbody>
                 @forelse($jobs as $job)
@@ -74,12 +74,6 @@
                     <td><small class="text-muted">{{ $job->poster?->name }}</small></td>
                     <td><small>Nu. {{ number_format($job->budget_min) }}–{{ number_format($job->budget_max) }}</small></td>
                     <td><span class="badge bg-{{ match($job->status){ 'open'=>'success','in_progress'=>'info','completed'=>'primary','cancelled','moderated'=>'danger', default=>'secondary'} }}" style="font-size:10px">{{ ucfirst(str_replace('_',' ',$job->status)) }}</span></td>
-                    <td>
-                        <form method="POST" action="{{ route('admin.jobs.feature', $job) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-sm {{ $job->is_featured ? 'btn-warning' : 'btn-outline-secondary' }}" title="{{ $job->is_featured ? 'Unfeature' : 'Feature' }}"><i class="fa fa-star" style="font-size:11px"></i></button>
-                        </form>
-                    </td>
                     <td><small class="text-muted">{{ $job->created_at->format('d M Y') }}</small></td>
                     <td class="text-end">
                         <div class="d-flex gap-1 justify-content-end">
@@ -93,7 +87,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="text-center text-muted py-4">No jobs found.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">No jobs found.</td></tr>
                 @endforelse
             </tbody>
         </table>

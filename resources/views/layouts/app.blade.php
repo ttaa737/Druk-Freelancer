@@ -200,6 +200,9 @@
             <a href="{{ route('contracts.index') }}" class="nav-link {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                 <i class="fa fa-file-contract"></i> My Contracts
             </a>
+            <a href="{{ route('reports.freelancer') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                <i class="fa fa-chart-line"></i> Reports
+            </a>
             <div class="sidebar-section">Account</div>
             <a href="{{ route('messages.index') }}" class="nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}">
                 <i class="fa fa-comments"></i> Messages
@@ -226,6 +229,9 @@
             </a>
             <a href="{{ route('contracts.index') }}" class="nav-link {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                 <i class="fa fa-file-contract"></i> Contracts
+            </a>
+            <a href="{{ route('reports.poster') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+                <i class="fa fa-chart-line"></i> Reports
             </a>
             <a href="{{ route('jobs.index') }}" class="nav-link {{ request()->routeIs('jobs.index') ? 'active' : '' }}">
                 <i class="fa fa-search"></i> Browse Talent

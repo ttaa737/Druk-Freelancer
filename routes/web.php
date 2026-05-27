@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDisputeController;
 use App\Http\Controllers\Admin\AdminJobController;
+use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminTransactionController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminVerificationController;
@@ -18,6 +20,7 @@ use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\WalletController;
@@ -85,7 +88,10 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::get('/my-jobs', [JobController::class, 'myJobs'])->name('my');
     });
     
-    // Public job show (must be after /jobs/post and /jobs/my-jobs to avoid route conflict)
+    Route::get('/jobs/attachments/{attachment}/preview', [JobController::class, 'previewAttachment'])->name('jobs.attachments.preview')->withoutMiddleware(['auth', 'verified', 'audit']);
+    Route::get('/jobs/attachments/{attachment}/download', [JobController::class, 'downloadAttachment'])->name('jobs.attachments.download')->withoutMiddleware(['auth', 'verified', 'audit']);
+
+    // Public job show (must be after attachment routes and fixed paths to avoid route conflict)
     Route::get('/jobs/{slug}', [JobController::class, 'show'])->name('jobs.show')->withoutMiddleware(['auth', 'verified', 'audit']);
 
     // ── Proposals ────────────────────────────────────────────────────────────
@@ -135,6 +141,7 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::post('/start', [MessageController::class, 'start'])->name('start');
         Route::get('/{conversation}', [MessageController::class, 'show'])->name('show');
         Route::post('/{conversation}/send', [MessageController::class, 'send'])->name('send');
+        Route::delete('/{conversation}', [MessageController::class, 'destroy'])->name('destroy');
         Route::post('/read/{message}', [MessageController::class, 'markRead'])->name('read');
         Route::get('/{conversation}/poll/{lastId?}', [MessageController::class, 'poll'])->name('poll');
     });
@@ -145,23 +152,26 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::get('/deposit', [WalletController::class, 'showDeposit'])->name('deposit.form');
         Route::post('/deposit', [WalletController::class, 'deposit'])->name('deposit');
         Route::get('/withdraw', [WalletController::class, 'showWithdraw'])->name('withdraw.form');
-        Route::post('/withdraw/otp', [WalletController::class, 'sendWithdrawOTP'])->name('withdraw.otp');
         Route::post('/withdraw', [WalletController::class, 'withdraw'])->name('withdraw');
         Route::post('/payment-method', [WalletController::class, 'addPaymentMethod'])->name('payment-method.add');
     });
 
     // ── Reports (role aware) ─────────────────────────────────────────────────
     Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/jobs', [App\Http\Controllers\ReportsController::class, 'jobs'])->name('jobs');
-        Route::get('/applications', [App\Http\Controllers\ReportsController::class, 'applications'])->name('applications');
-        Route::get('/earnings', [App\Http\Controllers\ReportsController::class, 'earnings'])->name('earnings');
-        Route::get('/contracts', [App\Http\Controllers\ReportsController::class, 'contracts'])->name('contracts');
+        Route::get('/', [ReportsController::class, 'index'])->name('index');
+        Route::get('/freelancer', [ReportsController::class, 'freelancer'])->name('freelancer');
+        Route::get('/poster', [ReportsController::class, 'poster'])->name('poster');
+        Route::get('/jobs', [ReportsController::class, 'jobs'])->name('jobs');
+        Route::get('/applications', [ReportsController::class, 'applications'])->name('applications');
+        Route::get('/earnings', [ReportsController::class, 'earnings'])->name('earnings');
+        Route::get('/contracts', [ReportsController::class, 'contracts'])->name('contracts');
     });
 
     // ── Reviews ───────────────────────────────────────────────────────────────
     Route::prefix('reviews')->name('reviews.')->group(function () {
         Route::get('/contracts/{contract}/create', [ReviewController::class, 'create'])->name('create');
         Route::post('/contracts/{contract}', [ReviewController::class, 'store'])->name('store');
+        Route::post('/{review}/report', [ReviewController::class, 'report'])->name('report');
     });
 
     // ── Disputes ──────────────────────────────────────────────────────────────
@@ -207,7 +217,6 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::prefix('jobs')->name('jobs.')->group(function () {
             Route::get('/', [AdminJobController::class, 'index'])->name('index');
             Route::get('/{job}', [AdminJobController::class, 'show'])->name('show');
-            Route::post('/{job}/feature', [AdminJobController::class, 'toggleFeatured'])->name('feature');
             Route::post('/{job}/moderate', [AdminJobController::class, 'moderate'])->name('moderate');
             Route::post('/{id}/restore', [AdminJobController::class, 'restore'])->name('restore');
         });
@@ -216,6 +225,7 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
         Route::prefix('disputes')->name('disputes.')->group(function () {
             Route::get('/', [AdminDisputeController::class, 'index'])->name('index');
             Route::get('/{dispute}', [AdminDisputeController::class, 'show'])->name('show');
+            Route::get('/{dispute}/evidence/{evidence}/download', [AdminDisputeController::class, 'downloadEvidence'])->name('evidence.download');
             Route::post('/{dispute}/assign', [AdminDisputeController::class, 'assign'])->name('assign');
             Route::post('/{dispute}/resolve', [AdminDisputeController::class, 'resolve'])->name('resolve');
         });
@@ -255,10 +265,18 @@ Route::middleware(['auth', 'verified', 'audit'])->group(function () {
             Route::post('/{submission}/reject', [AdminCompletionController::class, 'reject'])->name('reject');
         });
 
+        // Reviews Moderation
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [AdminReviewController::class, 'index'])->name('index');
+            Route::get('/{review}', [AdminReviewController::class, 'show'])->name('show');
+            Route::post('/{review}/hide', [AdminReviewController::class, 'hide'])->name('hide');
+            Route::post('/{review}/unhide', [AdminReviewController::class, 'unhide'])->name('unhide');
+            Route::post('/{review}/resolve', [AdminReviewController::class, 'resolveReport'])->name('resolve');
+        });
+
         // Admin Reports
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/users', [App\Http\Controllers\ReportsController::class, 'adminUsers'])->name('users');
-            Route::get('/financials', [App\Http\Controllers\ReportsController::class, 'adminFinancials'])->name('financials');
+            Route::get('/', [AdminReportController::class, 'index'])->name('index');
         });
     });
 });

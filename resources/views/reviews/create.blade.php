@@ -9,10 +9,10 @@
                 <p class="text-muted small mb-4">Your feedback helps build a trusted Druk Freelancer community.</p>
 
                 <div class="d-flex align-items-center gap-3 p-3 bg-light rounded mb-4">
-                    <img src="{{ $reviewee->avatar_url ? Storage::url($reviewee->avatar_url) : asset('img/default-avatar.png') }}" class="rounded-circle" style="width:50px;height:50px;object-fit:cover;">
+                    <img src="{{ $reviewee->avatar_url }}" class="rounded-circle" style="width:50px;height:50px;object-fit:cover;">
                     <div>
                         <div class="fw-semibold">{{ $reviewee->name }}</div>
-                        <small class="text-muted">Contract: {{ $contract->title }}</small>
+                        <small class="text-muted">Contract: {{ $contract->contract_number }} - {{ $contract->job?->title ?? 'Project' }}</small>
                     </div>
                 </div>
 
@@ -20,17 +20,24 @@
                     @csrf
                     @php
                     $dimensions = [
-                        'overall_rating'         => ['label' => 'Overall Experience', 'icon' => 'star'],
-                        'communication_rating'   => ['label' => 'Communication', 'icon' => 'comments'],
-                        'quality_rating'         => ['label' => 'Quality of Work', 'icon' => 'trophy'],
-                        'timeliness_rating'      => ['label' => 'Timeliness', 'icon' => 'clock'],
-                        'professionalism_rating' => ['label' => 'Professionalism', 'icon' => 'briefcase'],
+                        'rating_overall' => ['label' => 'Overall Experience', 'icon' => 'star', 'required' => true],
                     ];
+
+                    if ($reviewerRole === 'poster') {
+                        $dimensions['rating_communication'] = ['label' => 'Communication', 'icon' => 'comments', 'required' => true];
+                        $dimensions['rating_quality'] = ['label' => 'Work Quality', 'icon' => 'trophy', 'required' => true];
+                        $dimensions['rating_professionalism'] = ['label' => 'Professionalism', 'icon' => 'briefcase', 'required' => true];
+                        $dimensions['rating_timeliness'] = ['label' => 'Delivery Time', 'icon' => 'clock', 'required' => true];
+                    } else {
+                        $dimensions['rating_payment_behavior'] = ['label' => 'Payment Behavior', 'icon' => 'money-bill-wave', 'required' => true];
+                        $dimensions['rating_project_clarity'] = ['label' => 'Project Clarity', 'icon' => 'clipboard-list', 'required' => true];
+                        $dimensions['rating_communication'] = ['label' => 'Communication', 'icon' => 'comments', 'required' => true];
+                    }
                     @endphp
 
                     @foreach($dimensions as $field => $dim)
                     <div class="mb-4">
-                        <label class="form-label fw-semibold small"><i class="fa fa-{{ $dim['icon'] }} me-1 text-warning"></i>{{ $dim['label'] }}</label>
+                        <label class="form-label fw-semibold small"><i class="fa fa-{{ $dim['icon'] }} me-1 text-warning"></i>{{ $dim['label'] }} @if($dim['required'])<span class="text-danger">*</span>@endif</label>
                         <div class="star-rating d-flex gap-2" data-field="{{ $field }}">
                             @for($i=1;$i<=5;$i++)
                             <label class="star-label" style="cursor:pointer;font-size:1.5rem;color:#dee2e6">
@@ -42,6 +49,14 @@
                         @error($field)<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     @endforeach
+
+                    <div class="alert alert-light border small mb-3">
+                        @if($reviewerRole === 'poster')
+                            You are reviewing freelancer performance for hiring quality and accountability.
+                        @else
+                            You are reviewing client behavior to support fair and transparent collaboration.
+                        @endif
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Comment <span class="text-muted fw-normal">(Optional)</span></label>

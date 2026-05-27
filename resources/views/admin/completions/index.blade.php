@@ -7,9 +7,6 @@
         <h4 class="fw-bold mb-1">Completion Submissions</h4>
         <div class="text-muted small">Review completed work evidence, verify quality, and release payment settlement.</div>
     </div>
-    <a href="{{ route('admin.completions.stats') }}" class="btn btn-outline-primary btn-sm">
-        <i class="fa fa-chart-line me-1"></i>Statistics
-    </a>
 </div>
 
 <div class="row g-3 mb-4">
@@ -17,7 +14,7 @@
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Pending Review</div>
-                <div class="fs-3 fw-bold text-warning">{{ $submissions->where('status', 'pending')->count() }}</div>
+                <div class="fs-3 fw-bold text-warning">{{ $summary['pending'] ?? 0 }}</div>
             </div>
         </div>
     </div>
@@ -25,15 +22,15 @@
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Verified</div>
-                <div class="fs-3 fw-bold text-info">{{ $submissions->where('status', 'verified')->count() }}</div>
+                <div class="fs-3 fw-bold text-info">{{ $summary['verified'] ?? 0 }}</div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="text-muted small">Payment Processed</div>
-                <div class="fs-3 fw-bold text-success">{{ $submissions->where('status', 'payment_processed')->count() }}</div>
+                <div class="text-muted small">Verified</div>
+                <div class="fs-3 fw-bold text-info">{{ $summary['payment_processed'] ?? 0 }}</div>
             </div>
         </div>
     </div>
@@ -41,7 +38,7 @@
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Rejected</div>
-                <div class="fs-3 fw-bold text-danger">{{ $submissions->where('status', 'rejected')->count() }}</div>
+                <div class="fs-3 fw-bold text-danger">{{ $summary['rejected'] ?? 0 }}</div>
             </div>
         </div>
     </div>
@@ -60,7 +57,7 @@
                     <option value="">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="verified">Verified</option>
-                    <option value="payment_processed">Payment Processed</option>
+                    <option value="payment_processed">Verified</option>
                     <option value="rejected">Rejected</option>
                 </select>
             </div>
@@ -105,7 +102,7 @@
                         @elseif($submission->isVerified())
                             <span class="badge bg-info">Verified</span>
                         @elseif($submission->isPaymentProcessed())
-                            <span class="badge bg-success">Payment Processed</span>
+                            <span class="badge bg-info">Verified</span>
                         @else
                             <span class="badge bg-danger">Rejected</span>
                         @endif

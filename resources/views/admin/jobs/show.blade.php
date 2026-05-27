@@ -7,12 +7,6 @@
         <a href="{{ route('admin.jobs.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fa fa-arrow-left me-1"></i> Back</a>
         <a href="{{ route('jobs.show', $job->slug) }}" class="btn btn-sm btn-outline-primary" target="_blank"><i class="fa fa-eye me-1"></i> View Public</a>
         @if(!$job->trashed())
-        <form method="POST" action="{{ route('admin.jobs.feature', $job) }}">
-            @csrf
-            <button class="btn btn-sm {{ $job->is_featured ? 'btn-warning' : 'btn-outline-warning' }}">
-                <i class="fa fa-star me-1"></i>{{ $job->is_featured ? 'Unfeature' : 'Feature' }}
-            </button>
-        </form>
         @if($job->status !== 'moderated')
         <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#moderateModal">
             <i class="fa fa-ban me-1"></i>Moderate
@@ -37,7 +31,6 @@
         <div class="card mb-4">
             <div class="card-header d-flex align-items-center gap-2">
                 <span class="fw-semibold">{{ $job->title }}</span>
-                @if($job->is_featured)<span class="badge bg-warning text-dark ms-auto">Featured</span>@endif
             </div>
             <div class="card-body">
                 <div class="row g-3 mb-3">

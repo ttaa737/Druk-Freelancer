@@ -28,7 +28,7 @@
                             @elseif($submission->isVerified())
                                 <span class="badge bg-info">Verified</span>
                             @elseif($submission->isPaymentProcessed())
-                                <span class="badge bg-success">Payment Processed</span>
+                                <span class="badge bg-info">Verified</span>
                             @else
                                 <span class="badge bg-danger">Rejected</span>
                             @endif
@@ -69,26 +69,46 @@
                 <span class="badge bg-light text-dark border">{{ $submission->attachments->count() }} files</span>
             </div>
             <div class="card-body">
+                <div class="row g-3">
                 @forelse($submission->attachments as $attachment)
-                <div class="border rounded p-3 mb-3">
-                    <div class="d-flex flex-wrap justify-content-between gap-2 align-items-center">
-                        <div>
-                            <div class="fw-semibold">{{ $attachment->file_name }}</div>
-                            <div class="text-muted small">
-                                {{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB
+                    <div class="col-12">
+                        <div class="d-flex gap-3 align-items-center border rounded p-3">
+                            <div style="width:96px; flex:0 0 96px;">
+                                @if(str_starts_with($attachment->file_type, 'image'))
+                                    <img src="{{ $attachment->file_url }}?inline=1" alt="{{ $attachment->file_name }}" class="img-fluid rounded" style="max-height:92px; object-fit:cover; width:96px;" />
+                                @elseif(str_starts_with($attachment->file_type, 'video'))
+                                    <div class="d-flex align-items-center justify-content-center bg-light" style="height:92px; width:96px;"><i class="fa fa-video fa-2x text-muted"></i></div>
+                                @elseif($attachment->file_type === 'application/pdf')
+                                    <div class="d-flex align-items-center justify-content-center bg-light" style="height:92px; width:96px;"><i class="fa fa-file-pdf fa-2x text-danger"></i></div>
+                                @else
+                                    <div class="d-flex align-items-center justify-content-center bg-light" style="height:92px; width:96px;"><i class="fa fa-file fa-2x text-muted"></i></div>
+                                @endif
                             </div>
-                            @if($attachment->description)
-                            <div class="text-muted small mt-1">{{ $attachment->description }}</div>
-                            @endif
+
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ $attachment->file_name }}</div>
+                                <div class="text-muted small">
+                                    {{ $attachment->getDocumentTypeLabel() }} • {{ number_format($attachment->file_size / 1024, 1) }} KB
+                                </div>
+                                @if($attachment->description)
+                                    <div class="text-muted small mt-1">{{ $attachment->description }}</div>
+                                @endif
+                            </div>
+
+                            <div class="text-end">
+                                <button class="btn btn-sm btn-outline-secondary mb-2" onclick="showPreview('{{ $attachment->file_url }}?inline=1', '{{ $attachment->file_type }}', '{{ addslashes($attachment->file_name) }}')">
+                                    <i class="fa fa-eye me-1"></i>Preview
+                                </button>
+                                <a href="{{ route('completion.download-attachment', $attachment) }}" class="btn btn-sm btn-outline-primary d-block">
+                                    <i class="fa fa-download me-1"></i>Download
+                                </a>
+                            </div>
                         </div>
-                        <a href="{{ route('completion.download-attachment', $attachment) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fa fa-download me-1"></i>Download
-                        </a>
                     </div>
-                </div>
                 @empty
-                <div class="text-muted">No evidence files uploaded.</div>
+                    <div class="col-12 text-muted">No evidence files uploaded.</div>
                 @endforelse
+                </div>
             </div>
         </div>
 
@@ -197,8 +217,73 @@
     </div>
 </div>
 
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewTitle">Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent" style="min-height:300px; display:flex; align-items:center; justify-content:center;">
+                <!-- dynamic content -->
+            </div>
+            <div class="modal-footer">
+                <a id="previewDownload" href="#" class="btn btn-primary" target="_blank"><i class="fa fa-download me-1"></i>Download</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+function showPreview(url, mime, name) {
+    const content = document.getElementById('previewContent');
+    const title = document.getElementById('previewTitle');
+    const download = document.getElementById('previewDownload');
+    content.innerHTML = '';
+    title.textContent = name || 'Preview';
+    // Provide a direct download link (non-inline)
+    download.href = url.replace('?inline=1', '') + '';
+
+    if (mime && mime.startsWith('image')) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'img-fluid rounded';
+        img.style.maxHeight = '70vh';
+        content.appendChild(img);
+    } else if (mime && mime.startsWith('video')) {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.style.maxHeight = '70vh';
+        video.style.width = '100%';
+        const src = document.createElement('source');
+        src.src = url;
+        src.type = mime;
+        video.appendChild(src);
+        content.appendChild(video);
+    } else if (mime === 'application/pdf') {
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.width = '100%';
+        iframe.style.height = '70vh';
+        iframe.frameBorder = 0;
+        content.appendChild(iframe);
+    } else {
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.width = '100%';
+        iframe.style.height = '70vh';
+        iframe.frameBorder = 0;
+        content.appendChild(iframe);
+    }
+
+    const modalEl = document.getElementById('previewModal');
+    const bsModal = new bootstrap.Modal(modalEl);
+    bsModal.show();
+}
+
 async function submitAction(url, formData) {
     const response = await fetch(url, {
         method: 'POST',
@@ -220,19 +305,49 @@ async function submitAction(url, formData) {
 
 document.getElementById('approveForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn?.disabled) {
+        return;
+    }
+
     try {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.dataset.originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Processing...';
+        }
+
         await submitAction('{{ route("admin.completions.verify", $submission) }}', new FormData(this));
     } catch (error) {
         alert(error.message);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = submitBtn.dataset.originalText || 'Confirm Verification';
+        }
     }
 });
 
 document.getElementById('rejectForm')?.addEventListener('submit', async function (e) {
     e.preventDefault();
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn?.disabled) {
+        return;
+    }
+
     try {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.dataset.originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Processing...';
+        }
+
         await submitAction('{{ route("admin.completions.reject", $submission) }}', new FormData(this));
     } catch (error) {
         alert(error.message);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = submitBtn.dataset.originalText || 'Confirm Rejection';
+        }
     }
 });
 </script>

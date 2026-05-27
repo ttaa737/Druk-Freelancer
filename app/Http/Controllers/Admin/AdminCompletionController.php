@@ -25,11 +25,21 @@ class AdminCompletionController extends Controller
      */
     public function index()
     {
-        $submissions = CompletionSubmission::with('contract', 'freelancer', 'attachments')
+        $submissions = CompletionSubmission::with('contract.job', 'freelancer', 'attachments')
             ->latest('submitted_at')
             ->paginate(20);
 
-        return view('admin.completions.index', ['submissions' => $submissions]);
+        $summary = [
+            'pending' => CompletionSubmission::where('status', CompletionSubmission::STATUS_PENDING)->count(),
+            'verified' => CompletionSubmission::where('status', CompletionSubmission::STATUS_VERIFIED)->count(),
+            'payment_processed' => CompletionSubmission::where('status', CompletionSubmission::STATUS_PAYMENT_PROCESSED)->count(),
+            'rejected' => CompletionSubmission::where('status', CompletionSubmission::STATUS_REJECTED)->count(),
+        ];
+
+        return view('admin.completions.index', [
+            'submissions' => $submissions,
+            'summary' => $summary,
+        ]);
     }
 
     /**
@@ -47,29 +57,57 @@ class AdminCompletionController extends Controller
      */
     public function verify(Request $request, CompletionSubmission $submission)
     {
-        $validated = $request->validate([
+        $request->validate([
             'verification_notes' => 'nullable|string|min:10|max:1000',
         ]);
 
         try {
-            // Update submission status
-            $submission->status = CompletionSubmission::STATUS_VERIFIED;
-            $submission->verified_at = now();
-            $submission->verified_by = auth()->id();
-            $submission->save();
+            $updated = CompletionSubmission::query()
+                ->where('id', $submission->id)
+                ->where('status', CompletionSubmission::STATUS_PENDING)
+                ->update([
+                    'status' => CompletionSubmission::STATUS_VERIFIED,
+                    'verified_at' => now(),
+                    'verified_by' => auth()->id(),
+                    'updated_at' => now(),
+                ]);
+
+            if ($updated === 0) {
+                $submission->refresh();
+
+                if ($submission->isPaymentProcessed()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Completion is already verified and payment has already been processed.',
+                    ]);
+                }
+
+                if ($submission->isVerified()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Verification is already in progress. Please refresh to see the latest status.',
+                    ]);
+                }
+
+                if ($submission->isRejected()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This submission is already rejected and cannot be verified.',
+                    ], 422);
+                }
+            }
+
+            $submission->refresh();
 
             // Process payment
             $paymentProcessed = $this->paymentService->processCompletionPayment($submission);
 
             if ($paymentProcessed) {
-                // Update contract status
-                $contract = $submission->contract;
-                $contract->completion_status = 'verified';
-                $contract->save();
-
                 // Send notification to freelancer
                 NotificationService::completionApproved($submission->freelancer, $submission);
                 NotificationService::completionApprovedPoster($submission->contract->poster, $submission);
+
+                $contract = $submission->contract;
 
                 // Log the action
                 Log::info('Completion verified and payment processed', [
@@ -83,6 +121,17 @@ class AdminCompletionController extends Controller
                     'message' => 'Completion verified successfully. Payment has been processed and transferred to accounts.',
                 ]);
             } else {
+                // Payment failure should not leave verification locked in a partial state.
+                CompletionSubmission::query()
+                    ->where('id', $submission->id)
+                    ->where('status', CompletionSubmission::STATUS_VERIFIED)
+                    ->update([
+                        'status' => CompletionSubmission::STATUS_PENDING,
+                        'verified_at' => null,
+                        'verified_by' => null,
+                        'updated_at' => now(),
+                    ]);
+
                 throw new \Exception('Payment processing failed');
             }
         } catch (\Exception $e) {

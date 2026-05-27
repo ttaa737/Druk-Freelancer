@@ -36,8 +36,7 @@
                     <ol class="mb-0 small">
                         <li>Enter withdrawal amount and select your Bhutanese payment provider</li>
                         <li>Enter your account/mobile number registered with the provider</li>
-                        <li>We'll send an OTP to your email for security verification</li>
-                        <li>Enter the OTP to confirm your withdrawal request</li>
+                        <li>Review your details and confirm your withdrawal request</li>
                         <li>Funds will be transferred within 1-2 business days</li>
                     </ol>
                 </div>
@@ -68,30 +67,16 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Account Number / Mobile Number <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Account Number <span class="text-danger">*</span></label>
                         <input type="text" name="account_number" id="account_number" class="form-control @error('account_number') is-invalid @enderror" 
-                               placeholder="e.g., 1234567890 or 17XXXXXX" value="{{ old('account_number') }}" 
+                               placeholder="e.g., 1234567890" value="{{ old('account_number') }}" 
                                maxlength="50" required>
-                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account/mobile number registered with your payment provider</div>
+                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account number registered with your payment provider</div>
                         @error('account_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <button type="button" class="btn btn-warning w-100" onclick="sendOTP()" id="sendOtpBtn">
-                            <i class="fa fa-shield-alt me-2"></i>Send OTP to Email
-                        </button>
-                    </div>
-
-                    <div class="mb-4" id="otp-section" style="display: {{ $errors->has('otp') ? 'block' : 'none' }};">
-                        <label class="form-label fw-semibold">Enter OTP Code <span class="text-danger">*</span></label>
-                        <input type="text" name="otp" id="otp" class="form-control form-control-lg text-center fw-bold @error('otp') is-invalid @enderror" 
-                               maxlength="6" pattern="[0-9]{6}" placeholder="000000" style="letter-spacing: 0.5em;">
-                        <div class="form-text"><i class="fa fa-clock me-1"></i>OTP is valid for 10 minutes</div>
-                        @error('otp') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg fw-semibold" id="submit-btn" {{ $errors->has('otp') ? '' : 'disabled' }}>
+                        <button type="submit" class="btn btn-primary btn-lg fw-semibold" id="submit-btn">
                             <i class="fa fa-check-circle me-2"></i>Confirm Withdrawal
                         </button>
                         <a href="{{ route('wallet.index') }}" class="btn btn-outline-secondary">
@@ -161,71 +146,11 @@
 
 @push('scripts')
 <script>
-let otpSent = {{ $errors->has('otp') ? 'true' : 'false' }};
-
-function sendOTP() {
-    const amount = document.getElementById('amount').value;
-    const provider = document.getElementById('provider').value;
-    const accountNumber = document.getElementById('account_number').value;
-
-    if (!amount || !provider || !accountNumber) {
-        showAlert('Please fill in all withdrawal details first', 'warning');
-        return;
-    }
-
-    if (parseFloat(amount) < 500) {
-        showAlert('Minimum withdrawal amount is Nu. 500', 'warning');
-        return;
-    }
-
-    const maxAmount = {{ $wallet?->available_balance ?? 0 }};
-    if (parseFloat(amount) > maxAmount) {
-        showAlert('Withdrawal amount exceeds available balance', 'warning');
-        return;
-    }
-
-    // Disable button and show loading
-    const btn = document.getElementById('sendOtpBtn');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Sending OTP...';
-
-    fetch('{{ route("wallet.withdraw.otp") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({ amount, provider, account_number: accountNumber })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('otp-section').style.display = 'block';
-            document.getElementById('submit-btn').disabled = false;
-            document.getElementById('otp').focus();
-            otpSent = true;
-            showAlert('OTP sent to your email. Please check your inbox and enter the code below.', 'success');
-            btn.innerHTML = '<i class="fa fa-check-circle me-2"></i>OTP Sent';
-        } else {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            showAlert(data.message || 'Failed to send OTP. Please try again.', 'danger');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        showAlert('An error occurred. Please try again.', 'danger');
-    });
-}
-
 function usePaymentMethod(provider, accountNumber) {
     document.getElementById('provider').value = provider;
     document.getElementById('account_number').value = accountNumber;
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    showAlert('Payment method selected. Enter withdrawal amount and send OTP.', 'info');
+    showAlert('Payment method selected. Enter withdrawal amount and submit.', 'info');
 }
 
 function showAlert(message, type) {

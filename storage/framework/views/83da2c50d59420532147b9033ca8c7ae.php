@@ -18,19 +18,6 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-3">
-                    <i class="fa fa-lock fa-2x opacity-75"></i>
-                    <div>
-                        <div class="small opacity-75">In Escrow</div>
-                        <div class="fw-bold fs-4">Nu. <?php echo e(number_format($wallet->escrow_balance)); ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
         <div class="card bg-success text-white">
             <div class="card-body">
                 <div class="d-flex align-items-center gap-3">

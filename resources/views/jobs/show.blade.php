@@ -12,9 +12,6 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                     <div>
-                        @if($job->is_featured)
-                        <span class="badge bg-warning text-dark mb-2"><i class="fa fa-star me-1"></i>Featured Job</span>
-                        @endif
                         <h2 class="fw-bold mb-2" style="font-size:28px;">{{ $job->title }}</h2>
                     </div>
                 </div>
@@ -98,11 +95,43 @@
                 @if($job->attachments()->exists())
                 <div class="mb-4">
                     <h6 class="fw-bold mb-3 pb-2 border-bottom"><i class="fa fa-paperclip me-2 text-primary"></i>Attachments</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach($job->attachments()->get() as $attachment)
-                        <a href="{{ Storage::url($attachment->file_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2">
-                            <i class="fa fa-download"></i>{{ $attachment->original_name }}
-                        </a>
+                    <div class="row g-3">
+                        @foreach($job->attachments as $attachment)
+                        @php
+                            $mime = strtolower((string) $attachment->file_type);
+                            $isImage = str_starts_with($mime, 'image/');
+                            $isPdf = str_contains($mime, 'pdf');
+                            $badgeClass = $isImage ? 'success' : ($isPdf ? 'danger' : 'secondary');
+                            $icon = $isImage ? 'image' : ($isPdf ? 'file-pdf' : 'file-alt');
+                        @endphp
+                        <div class="col-md-6 col-xl-4">
+                            <div class="card h-100 border shadow-sm">
+                                <div class="card-body d-flex flex-column">
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="rounded-circle bg-{{ $badgeClass }} bg-opacity-10 text-{{ $badgeClass }} d-flex align-items-center justify-content-center flex-shrink-0" style="width:44px;height:44px;">
+                                            <i class="fa fa-{{ $icon }}"></i>
+                                        </div>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="fw-semibold text-truncate">{{ $attachment->original_name }}</div>
+                                            <div class="text-muted small text-truncate">{{ $attachment->file_type ?? 'File attachment' }}</div>
+                                        </div>
+                                    </div>
+
+                                    @if($attachment->previewable)
+                                    <button type="button" class="btn btn-outline-primary btn-sm mb-2 preview-attachment-btn"
+                                        data-preview-url="{{ $attachment->previewUrl }}"
+                                        data-preview-name="{{ $attachment->original_name }}"
+                                        data-preview-type="{{ $attachment->file_type }}">
+                                        <i class="fa fa-eye me-1"></i>Preview
+                                    </button>
+                                    @endif
+
+                                    <a href="{{ $attachment->downloadUrl }}" class="btn btn-outline-secondary btn-sm mt-auto">
+                                        <i class="fa fa-download me-1"></i>Download
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                         @endforeach
                     </div>
                 </div>
@@ -410,11 +439,33 @@
     </div>
 </div>
 
+<!-- Attachment Preview Modal -->
+<div class="modal fade" id="attachmentPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="attachmentPreviewTitle">Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0" id="attachmentPreviewBody" style="min-height:70vh;background:#f8f9fa;"></div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-primary" id="attachmentPreviewDownload" target="_blank"><i class="fa fa-download me-1"></i>Download</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const bidInput = document.querySelector('input[name="bid_amount"]');
     const effectiveMax = 500000;
+    const modalEl = document.getElementById('attachmentPreviewModal');
+    const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+    const title = document.getElementById('attachmentPreviewTitle');
+    const body = document.getElementById('attachmentPreviewBody');
+    const download = document.getElementById('attachmentPreviewDownload');
 
     if (bidInput) {
         bidInput.addEventListener('input', function() {
@@ -424,6 +475,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.classList.add('is-invalid');
             } else {
                 this.classList.remove('is-invalid');
+            }
+        });
+    }
+
+    document.querySelectorAll('.preview-attachment-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            const url = button.dataset.previewUrl;
+            const name = button.dataset.previewName || 'Preview';
+            const type = (button.dataset.previewType || '').toLowerCase();
+
+            if (!modal || !title || !body || !download) {
+                window.open(url, '_blank', 'noopener');
+                return;
+            }
+
+            title.textContent = name;
+            download.href = url.replace('/preview', '/download');
+
+            if (type.includes('image/')) {
+                body.innerHTML = '<div class="d-flex justify-content-center align-items-center p-3" style="min-height:70vh;"><img src="' + url + '" class="img-fluid rounded shadow-sm" style="max-height:68vh;object-fit:contain;" alt="Preview"></div>';
+            } else if (type.includes('pdf')) {
+                body.innerHTML = '<iframe src="' + url + '" style="width:100%;height:70vh;border:0;background:#fff;"></iframe>';
+            } else {
+                body.innerHTML = '<div class="p-5 text-center text-muted"><i class="fa fa-file-alt fa-3x mb-3 opacity-25"></i><div>This file type cannot be previewed inline.</div></div>';
+            }
+
+            modal.show();
+        });
+    });
+
+    if (modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            if (body) {
+                body.innerHTML = '';
             }
         });
     }

@@ -32,6 +32,18 @@
                         <div class="text-muted small">Payment Provider</div>
                         <div class="small fw-semibold">{{ ucfirst($transaction->payment_provider ?? 'N/A') }}</div>
                     </div>
+                    @if($transaction->account_number)
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Account Number</div>
+                        <div class="small fw-semibold font-monospace">{{ $transaction->account_number }}</div>
+                    </div>
+                    @endif
+                    @if($transaction->account_name)
+                    <div class="col-sm-6">
+                        <div class="text-muted small">Account Holder Name</div>
+                        <div class="small fw-semibold">{{ $transaction->account_name }}</div>
+                    </div>
+                    @endif
                     <div class="col-sm-4">
                         <div class="text-muted small">Amount</div>
                         <div class="fw-bold text-primary">Nu. {{ number_format($transaction->amount, 2) }}</div>

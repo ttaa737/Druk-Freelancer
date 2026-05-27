@@ -6,7 +6,6 @@ use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Services\AuditLogService;
-use App\Services\OTPService;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,8 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class WalletController extends Controller
 {
     public function __construct(
-        private PaymentService $payment,
-        private OTPService $otp
+        private PaymentService $payment
     ) {
         $this->middleware('auth');
         $this->middleware('verified');
@@ -41,6 +39,9 @@ class WalletController extends Controller
      */
     public function showDeposit()
     {
+        if (!Auth::user()->isVerified()) {
+            return redirect()->route('wallet.index')->with('error', 'Your account must be verified before making deposits.');
+        }
         $providers = PaymentService::PROVIDERS;
         return view('wallet.deposit', compact('providers'));
     }
@@ -50,11 +51,14 @@ class WalletController extends Controller
      */
     public function deposit(Request $request)
     {
+        if (!Auth::user()->isVerified()) {
+            return redirect()->route('wallet.index')->with('error', 'Your account must be verified before making deposits.');
+        }
         $request->validate([
             'provider'     => 'required|in:' . implode(',', array_keys(PaymentService::PROVIDERS)),
             'amount'       => 'required|numeric|min:100|max:1000000',
             'account_number' => 'required|string|max:50',
-            'provider_ref' => 'required|string|max:100',
+            'account_name' => 'required|string|max:200',
         ]);
 
         try {
@@ -63,7 +67,7 @@ class WalletController extends Controller
                 $request->amount,
                 $request->provider,
                 $request->account_number,
-                $request->provider_ref
+                $request->account_name
             );
 
             return redirect()->route('wallet.index')
@@ -78,6 +82,9 @@ class WalletController extends Controller
      */
     public function showWithdraw()
     {
+        if (!Auth::user()->isVerified()) {
+            return redirect()->route('wallet.index')->with('error', 'Your account must be verified before making withdrawals.');
+        }
         $paymentMethods = PaymentMethod::where('user_id', Auth::id())->get();
         $providers = PaymentService::PROVIDERS;
         $wallet = Auth::user()->wallet;
@@ -86,44 +93,18 @@ class WalletController extends Controller
     }
 
     /**
-     * Send OTP before withdrawal.
-     */
-    public function sendWithdrawOTP(Request $request)
-    {
-        $user = Auth::user();
-        
-        // Validate the withdrawal details
-        $request->validate([
-            'amount' => 'required|numeric|min:500',
-            'provider' => 'required|in:' . implode(',', array_keys(PaymentService::PROVIDERS)),
-            'account_number' => 'required|string|max:50',
-        ]);
-        
-        $this->otp->sendEmailOTP($user, 'withdrawal');
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'OTP sent to your email']);
-        }
-
-        return back()->with('success', 'OTP sent to your email. Valid for 10 minutes.');
-    }
-
-    /**
      * Process a withdrawal request.
      */
     public function withdraw(Request $request)
     {
+        if (!Auth::user()->isVerified()) {
+            return redirect()->route('wallet.index')->with('error', 'Your account must be verified before making withdrawals.');
+        }
         $request->validate([
             'amount'         => 'required|numeric|min:500',
             'provider'       => 'required|in:' . implode(',', array_keys(PaymentService::PROVIDERS)),
             'account_number' => 'required|string|max:50',
-            'otp'            => 'required|string|size:6',
         ]);
-
-        // Verify OTP
-        if (!$this->otp->verify(Auth::user()->email, 'withdrawal', $request->otp)) {
-            return back()->withErrors(['otp' => 'Invalid or expired OTP. Please request a new one.']);
-        }
 
         try {
             $transaction = $this->payment->withdraw(

@@ -201,6 +201,9 @@
             <a href="<?php echo e(route('contracts.index')); ?>" class="nav-link <?php echo e(request()->routeIs('contracts.*') ? 'active' : ''); ?>">
                 <i class="fa fa-file-contract"></i> My Contracts
             </a>
+            <a href="<?php echo e(route('reports.freelancer')); ?>" class="nav-link <?php echo e(request()->routeIs('reports.*') ? 'active' : ''); ?>">
+                <i class="fa fa-chart-line"></i> Reports
+            </a>
             <div class="sidebar-section">Account</div>
             <a href="<?php echo e(route('messages.index')); ?>" class="nav-link <?php echo e(request()->routeIs('messages.*') ? 'active' : ''); ?>">
                 <i class="fa fa-comments"></i> Messages
@@ -227,6 +230,9 @@
             </a>
             <a href="<?php echo e(route('contracts.index')); ?>" class="nav-link <?php echo e(request()->routeIs('contracts.*') ? 'active' : ''); ?>">
                 <i class="fa fa-file-contract"></i> Contracts
+            </a>
+            <a href="<?php echo e(route('reports.poster')); ?>" class="nav-link <?php echo e(request()->routeIs('reports.*') ? 'active' : ''); ?>">
+                <i class="fa fa-chart-line"></i> Reports
             </a>
             <a href="<?php echo e(route('jobs.index')); ?>" class="nav-link <?php echo e(request()->routeIs('jobs.index') ? 'active' : ''); ?>">
                 <i class="fa fa-search"></i> Browse Talent

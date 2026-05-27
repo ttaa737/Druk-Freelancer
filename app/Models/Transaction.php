@@ -14,7 +14,7 @@ class Transaction extends Model
     protected $fillable = [
         'transaction_ref', 'user_id', 'contract_id', 'milestone_id',
         'type', 'amount', 'fee', 'net_amount', 'status',
-        'payment_provider', 'account_number', 'payment_provider_ref', 'payment_provider_response',
+        'payment_provider', 'account_number', 'account_name', 'payment_provider_ref', 'payment_provider_response',
         'notes', 'balance_before', 'balance_after', 'ip_address',
     ];
 

@@ -26,8 +26,13 @@ class MessageController extends Controller
     {
         $userId = Auth::id();
 
-        $conversations = Conversation::where('poster_id', $userId)
-            ->orWhere('freelancer_id', $userId)
+        $conversations = Conversation::where(function ($query) use ($userId) {
+                $query->where(function ($q) use ($userId) {
+                    $q->where('poster_id', $userId)->where('poster_archived', false);
+                })->orWhere(function ($q) use ($userId) {
+                    $q->where('freelancer_id', $userId)->where('freelancer_archived', false);
+                });
+            })
             ->with(['poster.profile', 'freelancer.profile', 'job', 'latestMessage'])
             ->withCount(['messages as unread_count' => function ($q) use ($userId) {
                 $q->where('sender_id', '!=', $userId)->whereNull('read_at');
@@ -60,8 +65,13 @@ class MessageController extends Controller
 
         // Load all conversations for the sidebar
         $userId = Auth::id();
-        $conversations = Conversation::where('poster_id', $userId)
-            ->orWhere('freelancer_id', $userId)
+        $conversations = Conversation::where(function ($query) use ($userId) {
+                $query->where(function ($q) use ($userId) {
+                    $q->where('poster_id', $userId)->where('poster_archived', false);
+                })->orWhere(function ($q) use ($userId) {
+                    $q->where('freelancer_id', $userId)->where('freelancer_archived', false);
+                });
+            })
             ->with(['poster.profile', 'freelancer.profile', 'job', 'latestMessage'])
             ->latest('updated_at')
             ->get();
@@ -101,6 +111,16 @@ class MessageController extends Controller
                 'job_id'       => $job?->id,
             ]
         );
+
+        if ($user->id === $conversation->poster_id && $conversation->poster_archived) {
+            $conversation->poster_archived = false;
+            $conversation->save();
+        }
+
+        if ($user->id === $conversation->freelancer_id && $conversation->freelancer_archived) {
+            $conversation->freelancer_archived = false;
+            $conversation->save();
+        }
 
         return redirect()->route('messages.show', $conversation);
     }
@@ -177,6 +197,33 @@ class MessageController extends Controller
         return response()->json(['messages' => $messages]);
     }
 
+    /**
+     * Delete a conversation from the authenticated user's inbox.
+     */
+    public function destroy(Conversation $conversation)
+    {
+        $this->authorizeConversation($conversation);
+
+        if (Auth::id() === $conversation->poster_id) {
+            $conversation->poster_archived = true;
+        } else {
+            $conversation->freelancer_archived = true;
+        }
+
+        $shouldRemoveConversation = $conversation->poster_archived && $conversation->freelancer_archived;
+
+        if ($shouldRemoveConversation) {
+            $conversation->messages()->delete();
+            $conversation->delete();
+        } else {
+            $conversation->save();
+        }
+
+        AuditLogService::log('conversation.deleted', $conversation, notes: 'Conversation archived from inbox');
+
+        return redirect()->route('messages.index')->with('success', 'Conversation removed from your inbox.');
+    }
+
     // ─── Private ─────────────────────────────────────────────────────────────
 
     private function authorizeConversation(Conversation $conversation): void
@@ -186,6 +233,14 @@ class MessageController extends Controller
             $conversation->poster_id !== $userId && $conversation->freelancer_id !== $userId,
             403
         );
+
+        if ($conversation->poster_id === $userId && $conversation->poster_archived) {
+            abort(404);
+        }
+
+        if ($conversation->freelancer_id === $userId && $conversation->freelancer_archived) {
+            abort(404);
+        }
     }
 }
 

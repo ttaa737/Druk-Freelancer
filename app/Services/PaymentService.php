@@ -56,18 +56,11 @@ class PaymentService
      * Deposit funds to a user's platform wallet from a Bhutanese payment provider.
      * In production, this would integrate with the actual payment gateway APIs.
      */
-    public function deposit(User $user, float $amount, string $provider, string $accountNumber, string $providerRef): Transaction
+    public function deposit(User $user, float $amount, string $provider, string $accountNumber, string $accountName): Transaction
     {
-        return DB::transaction(function () use ($user, $amount, $provider, $accountNumber, $providerRef) {
+        return DB::transaction(function () use ($user, $amount, $provider, $accountNumber, $accountName) {
             $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
             $balanceBefore = $wallet->available_balance;
-
-            // Verify payment with provider (stub - replace with real API call)
-            $verified = $this->verifyWithProvider($provider, $providerRef, $amount);
-
-            if (!$verified) {
-                throw new \Exception("Payment verification failed with {$provider}. Reference: {$providerRef}");
-            }
 
             $wallet->increment('available_balance', $amount);
 
@@ -80,7 +73,8 @@ class PaymentService
                 'status'                   => 'completed',
                 'payment_provider'         => $provider,
                 'account_number'           => $accountNumber,
-                'payment_provider_ref'     => $providerRef,
+                'account_name'             => $accountName,
+                'payment_provider_ref'     => null,
                 'notes'                    => "Wallet deposit from {$accountNumber} via " . self::PROVIDERS[$provider]['name'],
                 'balance_before'           => $balanceBefore,
                 'balance_after'            => $wallet->fresh()->available_balance,

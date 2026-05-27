@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\JobAttachment;
 use App\Models\Job;
 use App\Models\Profile;
 use App\Models\Skill;
@@ -193,6 +194,33 @@ class JobController extends Controller
         return view('jobs.show', compact('job', 'alreadyApplied', 'similarJobs'));
     }
 
+    public function previewAttachment(JobAttachment $attachment)
+    {
+        $this->authorizeJobAttachmentAccess($attachment);
+
+        abort_unless(Storage::disk('public')->exists($attachment->file_path), 404, 'Attachment file not found.');
+
+        $mime = $attachment->file_type ?: Storage::disk('public')->mimeType($attachment->file_path);
+
+        return Storage::disk('public')->response(
+            $attachment->file_path,
+            $attachment->original_name,
+            ['Content-Disposition' => 'inline; filename="' . $attachment->original_name . '"']
+        );
+    }
+
+    public function downloadAttachment(JobAttachment $attachment)
+    {
+        $this->authorizeJobAttachmentAccess($attachment);
+
+        abort_unless(Storage::disk('public')->exists($attachment->file_path), 404, 'Attachment file not found.');
+
+        return Storage::disk('public')->download(
+            $attachment->file_path,
+            $attachment->original_name ?? basename($attachment->file_path)
+        );
+    }
+
     public function edit(Job $job)
     {
         $this->authorize('update', $job);
@@ -282,6 +310,22 @@ class JobController extends Controller
                    ->paginate(10);
 
         return view('jobs.my-jobs', compact('jobs'));
+    }
+
+    private function authorizeJobAttachmentAccess(JobAttachment $attachment): void
+    {
+        $job = $attachment->job()->with('poster')->first();
+
+        abort_unless($job, 404);
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->isAdmin() || $user->id === $job->poster_id || $user->isFreelancer()) {
+                return;
+            }
+        }
+
+        // Public job listings should still allow read-only access.
     }
 }
 

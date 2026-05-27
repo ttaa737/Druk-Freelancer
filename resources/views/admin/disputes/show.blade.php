@@ -15,15 +15,80 @@
 
         <!-- Evidence -->
         <div class="card mb-4">
-            <div class="card-header fw-bold">Evidence Files</div>
-            @forelse($dispute->evidence as $file)
-            <div class="list-group-item d-flex align-items-center justify-content-between p-3 border-bottom gap-3">
-                <div><i class="fa fa-file text-secondary me-2"></i><span class="small">{{ $file->original_name ?? basename($file->file_path) }}</span></div>
-                <a href="{{ Storage::url($file->file_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Evidence Files</span>
+                <span class="badge bg-light text-dark border">{{ $dispute->evidence->count() }} files</span>
             </div>
-            @empty
-            <div class="card-body text-muted small text-center">No evidence files.</div>
-            @endforelse
+            <div class="card-body">
+                <div class="row g-3">
+                    @forelse($dispute->evidence as $file)
+                    @php
+                        $downloadUrl = route('admin.disputes.evidence.download', ['dispute' => $dispute, 'evidence' => $file]);
+                        $inlineUrl = $downloadUrl . '?inline=1';
+                        $fileName = $file->original_name ?? basename($file->file_path);
+                        $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                        $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+                        $videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
+                        $isImage = in_array($extension, $imageExtensions, true);
+                        $isVideo = in_array($extension, $videoExtensions, true);
+                        $isPdf = $extension === 'pdf';
+                    @endphp
+                    <div class="col-12">
+                        <div class="border rounded-3 bg-white overflow-hidden">
+                            <div class="p-3 border-bottom bg-light-subtle">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <div class="fw-semibold">{{ $fileName }}</div>
+                                        <div class="small text-muted mt-1">
+                                            Uploaded by {{ $file->submittedBy?->name ?? 'Unknown' }} • {{ $file->created_at?->format('d M Y, h:i A') }}
+                                        </div>
+                                        @if($file->description)
+                                        <div class="small text-muted mt-1">{{ $file->description }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ $inlineUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa fa-eye me-1"></i>Open Preview
+                                        </a>
+                                        <a href="{{ $downloadUrl }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-download me-1"></i>Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-3">
+                                @if($isImage)
+                                <div class="rounded-3 border overflow-hidden bg-light-subtle">
+                                    <img src="{{ $inlineUrl }}" alt="{{ $fileName }}" class="img-fluid w-100" style="max-height:420px; object-fit:contain;" loading="lazy">
+                                </div>
+                                @elseif($isVideo)
+                                <div class="rounded-3 border overflow-hidden bg-dark">
+                                    <video controls preload="metadata" class="w-100" style="max-height:420px;">
+                                        <source src="{{ $inlineUrl }}">
+                                        Your browser does not support video playback. Use Download instead.
+                                    </video>
+                                </div>
+                                @elseif($isPdf)
+                                <div class="rounded-3 border overflow-hidden" style="height:520px;">
+                                    <iframe src="{{ $inlineUrl }}" title="PDF preview for {{ $fileName }}" class="w-100 h-100 border-0"></iframe>
+                                </div>
+                                @else
+                                <div class="rounded-3 border bg-light-subtle p-4 text-center text-muted">
+                                    <i class="fa fa-file fa-lg d-block mb-2"></i>
+                                    Inline preview is not available for .{{ $extension ?: 'file' }}. Use Open Preview or Download.
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="col-12">
+                        <div class="text-muted small text-center py-3">No evidence files.</div>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
         </div>
 
         <!-- Comments -->

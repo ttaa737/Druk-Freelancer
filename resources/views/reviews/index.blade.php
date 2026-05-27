@@ -40,22 +40,24 @@
                         </div>
                         <div class="mb-2">
                             @for($i = 1; $i <= 5; $i++)
-                                <i class="fa fa-star {{ $i <= $review->overall_rating ? 'text-warning' : 'text-muted' }}" style="font-size:13px"></i>
+                                <i class="fa fa-star {{ $i <= $review->rating_overall ? 'text-warning' : 'text-muted' }}" style="font-size:13px"></i>
                             @endfor
-                            <span class="ms-1 small text-muted">{{ number_format($review->overall_rating, 1) }}/5</span>
+                            <span class="ms-1 small text-muted">{{ number_format($review->rating_overall, 1) }}/5</span>
                         </div>
 
                         @if($review->comment)
                         <p class="mb-2 small">{{ $review->comment }}</p>
                         @endif
 
-                        @if($review->communication_rating || $review->quality_rating || $review->timeliness_rating || $review->professionalism_rating)
+                        @if($review->rating_communication || $review->rating_quality || $review->rating_timeliness || $review->rating_professionalism || $review->rating_payment_behavior || $review->rating_project_clarity)
                         <div class="row g-2 mt-1">
                             @foreach([
-                                'communication_rating' => 'Communication',
-                                'quality_rating' => 'Quality',
-                                'timeliness_rating' => 'Timeliness',
-                                'professionalism_rating' => 'Professionalism',
+                                'rating_communication' => 'Communication',
+                                'rating_quality' => 'Quality',
+                                'rating_timeliness' => 'Timeliness',
+                                'rating_professionalism' => 'Professionalism',
+                                'rating_payment_behavior' => 'Payment',
+                                'rating_project_clarity' => 'Project Clarity',
                             ] as $field => $label)
                                 @if($review->$field)
                                 <div class="col-6 col-sm-3">
@@ -70,6 +72,18 @@
                             @endforeach
                         </div>
                         @endif
+
+                        @auth
+                            @if(auth()->id() !== $review->reviewer_id && !$review->is_flagged)
+                                <form method="POST" action="{{ route('reviews.report', $review) }}" class="mt-2">
+                                    @csrf
+                                    <input type="hidden" name="reason" value="Reported from public reviews page for moderation check.">
+                                    <button type="submit" class="btn btn-link btn-sm text-danger p-0">Report this feedback</button>
+                                </form>
+                            @elseif($review->is_flagged)
+                                <div class="small text-warning mt-2">This feedback is currently under review by admins.</div>
+                            @endif
+                        @endauth
                     </div>
                 </div>
             </div>

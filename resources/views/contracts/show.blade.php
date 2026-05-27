@@ -35,10 +35,6 @@
                             <div class="mt-2 text-success small">
                                 <i class="fa fa-check-circle me-1"></i>Signed on {{ $contract->updated_at->format('d M Y, h:i A') }}
                             </div>
-                            @else
-                            <div class="mt-2 text-warning small">
-                                <i class="fa fa-clock me-1"></i>Signature Pending
-                            </div>
                             @endif
                         </div>
                     </div>
@@ -55,10 +51,6 @@
                             @if($contract->freelancer_signed)
                             <div class="mt-2 text-success small">
                                 <i class="fa fa-check-circle me-1"></i>Signed on {{ $contract->updated_at->format('d M Y, h:i A') }}
-                            </div>
-                            @else
-                            <div class="mt-2 text-warning small">
-                                <i class="fa fa-clock me-1"></i>Signature Pending
                             </div>
                             @endif
                         </div>

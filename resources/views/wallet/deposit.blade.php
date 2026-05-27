@@ -17,7 +17,6 @@
                     <h6 class="fw-bold mb-2"><i class="fa fa-lightbulb text-warning me-2"></i>How to Deposit</h6>
                     <ol class="mb-0 small">
                         <li>Complete payment through your Bhutanese mobile banking or digital wallet app</li>
-                        <li>Copy the transaction reference/ID from your payment app</li>
                         <li>Enter the details below and submit</li>
                         <li>Funds will be credited instantly upon verification</li>
                     </ol>
@@ -48,21 +47,21 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Account Number / Mobile Number <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Account Number <span class="text-danger">*</span></label>
                         <input type="text" name="account_number" class="form-control @error('account_number') is-invalid @enderror"
-                               placeholder="e.g., 1234567890 or 17XXXXXX" value="{{ old('account_number') }}"
+                               placeholder="e.g., 1234567890" value="{{ old('account_number') }}"
                                maxlength="50" required>
-                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account/mobile number used for this deposit</div>
+                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account number used for this deposit</div>
                         @error('account_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Transaction Reference (from your payment app) <span class="text-danger">*</span></label>
-                        <input type="text" name="provider_ref" class="form-control @error('provider_ref') is-invalid @enderror" 
-                               placeholder="e.g. TXN12345 or REF789456" value="{{ old('provider_ref') }}" 
-                               maxlength="100" required>
-                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the transaction ID/reference from your payment confirmation</div>
-                        @error('provider_ref') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label fw-semibold">Account Holder Name <span class="text-danger">*</span></label>
+                        <input type="text" name="account_name" class="form-control @error('account_name') is-invalid @enderror"
+                               placeholder="e.g., Tandin Wangchuk" value="{{ old('account_name') }}"
+                               maxlength="200" required>
+                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the name of the account holder</div>
+                        @error('account_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="d-grid gap-2">

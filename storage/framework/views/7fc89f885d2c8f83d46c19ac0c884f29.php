@@ -142,9 +142,20 @@
                             <small class="text-muted"><?php echo e($review->created_at->diffForHumans()); ?></small>
                         </div>
                         <div class="d-flex gap-1 mb-1">
-                            <?php for($i=1;$i<=5;$i++): ?><i class="fa fa-star<?php echo e($i <= $review->overall_rating ? '' : '-o'); ?> text-warning" style="font-size:11px"></i><?php endfor; ?>
+                            <?php for($i=1;$i<=5;$i++): ?><i class="fa fa-star<?php echo e($i <= $review->rating_overall ? '' : '-o'); ?> text-warning" style="font-size:11px"></i><?php endfor; ?>
                         </div>
                         <?php if($review->comment): ?><p class="text-muted small mb-0"><?php echo e($review->comment); ?></p><?php endif; ?>
+                        <?php if(auth()->guard()->check()): ?>
+                            <?php if(auth()->id() !== $review->reviewer_id && !$review->is_flagged): ?>
+                                <form method="POST" action="<?php echo e(route('reviews.report', $review)); ?>" class="mt-2">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="reason" value="Reported from profile page for moderation check.">
+                                    <button type="submit" class="btn btn-link btn-sm text-danger p-0">Report feedback</button>
+                                </form>
+                            <?php elseif($review->is_flagged): ?>
+                                <div class="small text-warning mt-2">This feedback is currently under moderation.</div>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

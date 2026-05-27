@@ -155,6 +155,14 @@ class CompletionSubmissionController extends Controller
             abort(404, 'File not found');
         }
 
+        // If inline preview requested, stream the file for inline display (images, PDFs, video)
+        if (request()->boolean('inline')) {
+            $fullPath = $disk->path($attachment->file_path);
+            return response()->file($fullPath, [
+                'Content-Type' => $attachment->file_type,
+            ]);
+        }
+
         return $disk->download($attachment->file_path, $attachment->file_name);
     }
 

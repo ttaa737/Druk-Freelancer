@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DisputeCase;
+use App\Models\DisputeEvidence;
 use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\EscrowService;
@@ -11,6 +12,7 @@ use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AdminDisputeController extends Controller
 {
@@ -48,6 +50,28 @@ class AdminDisputeController extends Controller
         ]);
 
         return view('admin.disputes.show', compact('dispute'));
+    }
+
+    public function downloadEvidence(DisputeCase $dispute, DisputeEvidence $evidence)
+    {
+        abort_unless((int) $evidence->dispute_id === (int) $dispute->id, 404);
+
+        $disk = Storage::disk('public');
+        if (!$disk->exists($evidence->file_path)) {
+            abort(404, 'Evidence file not found');
+        }
+
+        $fullPath = $disk->path($evidence->file_path);
+        $downloadName = $evidence->original_name ?: basename($evidence->file_path);
+
+        if (request()->boolean('inline')) {
+            $mimeType = $disk->mimeType($evidence->file_path) ?: 'application/octet-stream';
+            return response()->file($fullPath, [
+                'Content-Type' => $mimeType,
+            ]);
+        }
+
+        return $disk->download($evidence->file_path, $downloadName);
     }
 
     public function assign(DisputeCase $dispute)

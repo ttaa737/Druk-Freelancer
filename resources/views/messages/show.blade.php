@@ -146,6 +146,13 @@
                         <i class="fa fa-briefcase"></i>
                     </a>
                     @endif
+                    <form method="POST" action="{{ route('messages.destroy', $conversation) }}" onsubmit="return confirm('Delete this conversation from your inbox? You can no longer access it unless the other party sends a new message.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-light border rounded-circle p-2 text-danger" style="width: 36px; height: 36px;" title="Delete conversation">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
 

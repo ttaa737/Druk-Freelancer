@@ -45,15 +45,6 @@ class AdminJobController extends Controller
         return view('admin.jobs.show', compact('job'));
     }
 
-    /** Toggle featured status. */
-    public function toggleFeatured(Job $job)
-    {
-        $job->update(['is_featured' => !$job->is_featured]);
-        AuditLogService::log('job.' . ($job->is_featured ? 'featured' : 'unfeatured'), $job);
-
-        return back()->with('success', 'Job featured status updated.');
-    }
-
     /** Soft-delete / moderate a job. */
     public function moderate(Request $request, Job $job)
     {

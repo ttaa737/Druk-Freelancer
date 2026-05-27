@@ -35,10 +35,6 @@
                                 <i class="fa fa-check-circle me-1"></i>Signed on <?php echo e($contract->updated_at->format('d M Y, h:i A')); ?>
 
                             </div>
-                            <?php else: ?>
-                            <div class="mt-2 text-warning small">
-                                <i class="fa fa-clock me-1"></i>Signature Pending
-                            </div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -56,10 +52,6 @@
                             <div class="mt-2 text-success small">
                                 <i class="fa fa-check-circle me-1"></i>Signed on <?php echo e($contract->updated_at->format('d M Y, h:i A')); ?>
 
-                            </div>
-                            <?php else: ?>
-                            <div class="mt-2 text-warning small">
-                                <i class="fa fa-clock me-1"></i>Signature Pending
                             </div>
                             <?php endif; ?>
                         </div>

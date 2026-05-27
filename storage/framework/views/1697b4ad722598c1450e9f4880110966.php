@@ -65,7 +65,7 @@
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="table-light"><tr>
-                <th>Title</th><th>Poster</th><th>Budget</th><th>Status</th><th>Featured</th><th>Posted</th><th class="text-end">Actions</th>
+                <th>Title</th><th>Poster</th><th>Budget</th><th>Status</th><th>Posted</th><th class="text-end">Actions</th>
             </tr></thead>
             <tbody>
                 <?php $__empty_1 = true; $__currentLoopData = $jobs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
@@ -74,12 +74,6 @@
                     <td><small class="text-muted"><?php echo e($job->poster?->name); ?></small></td>
                     <td><small>Nu. <?php echo e(number_format($job->budget_min)); ?>–<?php echo e(number_format($job->budget_max)); ?></small></td>
                     <td><span class="badge bg-<?php echo e(match($job->status){ 'open'=>'success','in_progress'=>'info','completed'=>'primary','cancelled','moderated'=>'danger', default=>'secondary'}); ?>" style="font-size:10px"><?php echo e(ucfirst(str_replace('_',' ',$job->status))); ?></span></td>
-                    <td>
-                        <form method="POST" action="<?php echo e(route('admin.jobs.feature', $job)); ?>">
-                            <?php echo csrf_field(); ?>
-                            <button type="submit" class="btn btn-sm <?php echo e($job->is_featured ? 'btn-warning' : 'btn-outline-secondary'); ?>" title="<?php echo e($job->is_featured ? 'Unfeature' : 'Feature'); ?>"><i class="fa fa-star" style="font-size:11px"></i></button>
-                        </form>
-                    </td>
                     <td><small class="text-muted"><?php echo e($job->created_at->format('d M Y')); ?></small></td>
                     <td class="text-end">
                         <div class="d-flex gap-1 justify-content-end">
@@ -93,7 +87,7 @@
                     </td>
                 </tr>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                <tr><td colspan="7" class="text-center text-muted py-4">No jobs found.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">No jobs found.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

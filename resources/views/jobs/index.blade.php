@@ -65,11 +65,10 @@
         </div>
 
         @forelse($jobs as $job)
-        <div class="card mb-3 {{ $job->is_featured ? 'border-warning' : '' }}">
+        <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        @if($job->is_featured) <span class="badge bg-warning text-dark mb-1"><i class="fa fa-star me-1"></i>Featured</span> @endif
                         <h6 class="fw-bold mb-1">
                             <a href="{{ route('jobs.show', $job->slug) }}" class="text-dark text-decoration-none">{{ $job->title }}</a>
                         </h6>
