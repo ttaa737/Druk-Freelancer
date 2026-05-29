@@ -61408,3 +61408,4 @@
 [2026-05-27 11:06:35] local.INFO: Completion verified and payment processed {"submission_id":4,"contract_id":12,"admin_id":1} 
 [2026-05-27 12:13:37] local.ERROR: New proposal email failed for poster 37: Route [proposals.index] not defined.  
 [2026-05-27 12:32:47] local.INFO: Completion rejected {"submission_id":5,"contract_id":13,"admin_id":1,"reason":"Did not complete and was asking for payment"} 
+[2026-05-28 11:17:35] local.ERROR: New proposal email failed for poster 2: Route [proposals.index] not defined.  

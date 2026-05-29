@@ -5,15 +5,13 @@
 <div class="row justify-content-center">
     <div class="col-lg-6">
         <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-success text-white">
                 <h5 class="mb-0"><i class="fa fa-plus-circle me-2"></i>Deposit Funds</h5>
             </div>
             <div class="card-body p-4">
                 <div class="alert alert-info mb-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span><i class="fa fa-wallet me-2"></i><strong>Current Balance:</strong></span>
-                        <span class="fw-bold fs-5">Nu. <?php echo e(number_format(auth()->user()->wallet?->available_balance ?? 0, 2)); ?></span>
-                    </div>
+                    <i class="fa fa-info-circle me-2"></i><strong>Current Balance:</strong> Nu. <?php echo e(number_format(auth()->user()->wallet?->available_balance ?? 0, 2)); ?>
+
                 </div>
 
                 <div class="alert alert-light border mb-4">
@@ -28,31 +26,8 @@
                 <form method="POST" action="<?php echo e(route('wallet.deposit')); ?>">
                     <?php echo csrf_field(); ?>
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Amount (Nu.) <span class="text-danger">*</span></label>
-                        <input type="number" name="amount" id="amount" class="form-control form-control-lg <?php $__errorArgs = ['amount'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" 
-                               min="100" max="1000000" step="1" value="<?php echo e(old('amount', 1000)); ?>" 
-                               placeholder="Enter amount" required>
-                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Minimum: Nu. 100 | Maximum: Nu. 100,000</div>
-                        <?php $__errorArgs = ['amount'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> <div class="invalid-feedback"><?php echo e($message); ?></div> <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                    </div>
-
-                    <div class="mb-4">
                         <label class="form-label fw-semibold">Payment Provider <span class="text-danger">*</span></label>
-                        <select name="provider" id="provider" class="form-select <?php $__errorArgs = ['provider'];
+                        <select name="provider" class="form-select <?php $__errorArgs = ['provider'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -79,8 +54,31 @@ unset($__errorArgs, $__bag); ?>
                     </div>
 
                     <div class="mb-4">
+                        <label class="form-label fw-semibold">Amount (Nu.) <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" class="form-control form-control-lg <?php $__errorArgs = ['amount'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" 
+                               min="100" max="1000000" step="1" value="<?php echo e(old('amount', 1000)); ?>" 
+                               placeholder="Enter amount" required>
+                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Minimum: Nu. 100 | Maximum: Nu. 100,000</div>
+                        <?php $__errorArgs = ['amount'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <div class="invalid-feedback"><?php echo e($message); ?></div> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label fw-semibold">Account Number <span class="text-danger">*</span></label>
-                        <input type="text" name="account_number" id="account_number" class="form-control <?php $__errorArgs = ['account_number'];
+                        <input type="text" name="account_number" class="form-control <?php $__errorArgs = ['account_number'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -103,7 +101,7 @@ unset($__errorArgs, $__bag); ?>
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Account Holder Name <span class="text-danger">*</span></label>
-                        <input type="text" name="account_name" id="account_name" class="form-control <?php $__errorArgs = ['account_name'];
+                        <input type="text" name="account_name" class="form-control <?php $__errorArgs = ['account_name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }

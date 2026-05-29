@@ -45,7 +45,7 @@
                     <?php echo csrf_field(); ?>
                     
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Amount (Nu.) <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Withdrawal Amount (Nu.) <span class="text-danger">*</span></label>
                         <input type="number" name="amount" id="amount" class="form-control form-control-lg <?php $__errorArgs = ['amount'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -55,7 +55,7 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
                                min="500" max="<?php echo e($wallet?->available_balance ?? 0); ?>" step="1" 
-                               value="<?php echo e(old('amount', 500)); ?>" placeholder="Enter amount" required>
+                               value="<?php echo e(old('amount')); ?>" placeholder="Enter amount" required>
                         <div class="form-text"><i class="fa fa-info-circle me-1"></i>Minimum: Nu. 500 | Available: Nu. <?php echo e(number_format($wallet?->available_balance ?? 0, 2)); ?></div>
                         <?php $__errorArgs = ['amount'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -107,7 +107,7 @@ endif;
 unset($__errorArgs, $__bag); ?>" 
                                placeholder="e.g., 1234567890" value="<?php echo e(old('account_number')); ?>" 
                                maxlength="50" required>
-                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account number used for this withdrawal</div>
+                        <div class="form-text"><i class="fa fa-info-circle me-1"></i>Enter the account number registered with your payment provider</div>
                         <?php $__errorArgs = ['account_number'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
